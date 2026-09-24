@@ -1,0 +1,8 @@
+feature_position,feature,data_type,unit,description
+1,precipitation_max_mm,float,millimetres,Maximum valid county-grid daily precipitation
+2,temperature_mean_c,float,degrees Celsius,Mean county daily temperature
+3,relative_humidity_mean_pct,float,percent,Mean county daily relative humidity
+4,soil_wetness_mean_fraction,float,fraction,Mean county daily soil wetness
+5,soil_wetness_max_fraction,float,fraction,Maximum county-grid daily soil wetness
+6,month_sin,float,unitless,Sine component of calendar-month encoding
+7,month_cos,float,unitless,Cosine component of calendar-month encoding

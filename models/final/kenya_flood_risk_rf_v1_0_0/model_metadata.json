@@ -1,0 +1,90 @@
+{
+  "model_version": "1.0.0",
+  "model_release_id": "kenya_flood_risk_rf_v1_0_0",
+  "algorithm": "RandomForestClassifier",
+  "bundle_file": "kenya_flood_risk_rf_v1_0_0.joblib",
+  "bundle_sha256": "6463afdf5977e1dfadea92534d4471ba4d5f1d2dec038a757de7a39d81f9f444",
+  "software_versions": {
+    "scikit_learn": "1.6.1",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "joblib": "1.6.0"
+  },
+  "training_data": {
+    "period": [
+      "2010-01-01",
+      "2021-12-31"
+    ],
+    "training_regime": "HYBRID",
+    "total_rows": 156719,
+    "real_rows": 149022,
+    "synthetic_rows": 7697
+  },
+  "validation_data": {
+    "period": [
+      "2022-01-01",
+      "2023-12-31"
+    ],
+    "real_rows": 24820,
+    "macro_f1": 0.752201,
+    "high_precision": 0.664648,
+    "high_recall": 0.582211,
+    "high_f1": 0.620705
+  },
+  "test_data": {
+    "period": [
+      "2024-01-01",
+      "2025-12-31"
+    ],
+    "real_rows": 24854,
+    "accuracy": 0.7779431882192002,
+    "balanced_accuracy": 0.7403118015835961,
+    "macro_f1": 0.7450400070276344,
+    "weighted_f1": 0.7729368026913956,
+    "macro_ovr_roc_auc": 0.9189731662220629,
+    "high_precision": 0.711671270718232,
+    "high_recall": 0.576664801343033,
+    "high_f1": 0.6370942812982998
+  },
+  "model_parameters": {
+    "n_estimators": 300,
+    "max_depth": 24,
+    "min_samples_split": 2,
+    "min_samples_leaf": 1,
+    "max_features": "sqrt",
+    "bootstrap": true,
+    "oob_score": true,
+    "class_weight": "balanced_subsample",
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "feature_names": [
+    "precipitation_max_mm",
+    "temperature_mean_c",
+    "relative_humidity_mean_pct",
+    "soil_wetness_mean_fraction",
+    "soil_wetness_max_fraction",
+    "month_sin",
+    "month_cos"
+  ],
+  "class_order": [
+    "Low",
+    "Medium",
+    "High"
+  ],
+  "model_class_order": [
+    "High",
+    "Low",
+    "Medium"
+  ],
+  "decision_rule": {
+    "type": "high_probability_threshold",
+    "high_probability_threshold": 0.44,
+    "fallback_classes": [
+      "Low",
+      "Medium"
+    ]
+  },
+  "test_evaluations_completed": 1,
+  "model_retrained_after_test": false
+}
