@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     "monitoring",
 ]
 
@@ -151,3 +152,13 @@ MODEL_SCHEMA_PATH = PROJECT_ROOT / os.getenv(
     "MODEL_SCHEMA_PATH",
     "models/final/kenya_flood_risk_rf_v1_0_0/model_input_schema.csv",
 )
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+    "DEFAULT_PAGINATION_CLASS": (
+        "rest_framework.pagination.PageNumberPagination"
+    ),
+    "PAGE_SIZE": 50,
+}
