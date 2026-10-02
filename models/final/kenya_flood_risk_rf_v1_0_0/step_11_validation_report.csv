@@ -1,0 +1,29 @@
+substep,check,actual,expected,passed,status
+11A.1,Locked model ID,H_S07_T300,H_S07_T300,True,PASS
+11A.1,Locked decision rule,HIGH_THRESHOLD_0.44,HIGH_THRESHOLD_0.44,True,PASS
+11A.1,Locked High threshold,0.44,0.44,True,PASS
+11A.1,Final feature count,7,7,True,PASS
+11A.1,Fitted trees,300,300,True,PASS
+11A.1,Maximum depth,24,24,True,PASS
+11A.1,Minimum samples per leaf,1,1,True,PASS
+11A.1,Test evaluations completed,1,1,True,PASS
+11B.1,Model bundle saved,True,True,True,PASS
+11B.1,Model bundle nonempty,312354049,>0 bytes,True,PASS
+11B.1,SHA-256 checksum created,64,64,True,PASS
+11B.1,Model metadata saved,True,True,True,PASS
+11B.1,Input schema saved,True,True,True,PASS
+11B.1,Input schema features,7,7,True,PASS
+11C.1,Reloaded model version,1.0.0,1.0.0,True,PASS
+11C.1,Reloaded feature order,7,7,True,PASS
+11C.1,Reloaded class order,"['Low', 'Medium', 'High']","['Low', 'Medium', 'High']",True,PASS
+11C.1,Reloaded High threshold,0.44,0.44,True,PASS
+11C.1,Verification prediction rows,100,100,True,PASS
+11C.1,Maximum probability difference,1.1102230246251565e-16,<1e-12,True,PASS
+11C.1,Prediction disagreements,0,0,True,PASS
+11C.1,Bundle checksum agreement,True,True,True,PASS
+11D.1,Earlier Step 11 failures,0,0,True,PASS
+11D.1,Final model artifacts,9,9,True,PASS
+11D.1,Final artifacts exist,9,9,True,PASS
+11D.1,Final artifacts nonempty,9,9,True,PASS
+11D.1,Serialized prediction agreement,0,0,True,PASS
+11D.1,Model retrained after test,0,0,True,PASS

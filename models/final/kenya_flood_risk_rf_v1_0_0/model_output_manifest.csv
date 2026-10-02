@@ -1,0 +1,10 @@
+artifact,file_path,file_exists,file_nonempty
+Serialized model bundle,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/kenya_flood_risk_rf_v1_0_0.joblib,True,True
+SHA-256 checksum,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/kenya_flood_risk_rf_v1_0_0.sha256,True,True
+Model metadata,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/model_metadata.json,True,True
+Input schema,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/model_input_schema.csv,True,True
+Verification input,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/verification_input.csv,True,True
+Verification output,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/verification_output.csv,True,True
+Model card,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/MODEL_CARD.md,True,True
+Step 11 validation report,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/step_11_validation_report.csv,True,True
+Model output manifest,/content/drive/MyDrive/Kenya-flood-risk-platform/models/final/kenya_flood_risk_rf_v1_0_0/model_output_manifest.csv,True,True

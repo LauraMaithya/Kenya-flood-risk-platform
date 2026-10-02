@@ -216,3 +216,25 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local environment and secrets
+.venv/
+.env
+.env.*
+!.env.example
+
+# Django-generated files
+db.sqlite3
+media/
+staticfiles/
+
+# Project datasets
+data/raw/**
+data/interim/**
+data/processed/**
+data/synthetic/**
+!data/**/.gitkeep
+!data/README.md
+
+# Serialized model binary
+models/final/**/*.joblib
