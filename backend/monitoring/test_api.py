@@ -11,10 +11,18 @@ from monitoring.models import (
     EnvironmentalObservation,
     FloodPrediction,
 )
+from django.contrib.auth import get_user_model
 
 
 class MonitoringAPITests(APITestCase):
     def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="api-user",
+            email="api@example.com",
+            password="StrongTestPassword123!",
+        )
+        self.client.force_authenticate(user=self.user)
+        
         self.nairobi = County.objects.create(
             code="047",
             name="Nairobi",
