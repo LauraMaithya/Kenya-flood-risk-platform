@@ -1,5 +1,5 @@
 from datetime import date
-
+from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     ListAPIView,
@@ -37,6 +37,8 @@ def _parse_date_parameter(request, parameter):
 
 
 class HealthAPIView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request):
         return Response(
             {

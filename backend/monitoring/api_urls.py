@@ -9,6 +9,13 @@ from monitoring.api_views import (
     HealthAPIView,
 )
 
+from monitoring.auth_views import (
+    CSRFTokenAPIView,
+    CurrentUserAPIView,
+    LoginAPIView,
+    LogoutAPIView,
+    RegisterAPIView,
+)
 
 app_name = "monitoring-api"
 
@@ -38,5 +45,31 @@ urlpatterns = [
         "alerts/",
         AlertNotificationListAPIView.as_view(),
         name="alert-list",
+    ),
+
+        path(
+        "auth/csrf/",
+        CSRFTokenAPIView.as_view(),
+        name="auth-csrf",
+    ),
+    path(
+        "auth/register/",
+        RegisterAPIView.as_view(),
+        name="auth-register",
+    ),
+    path(
+        "auth/login/",
+        LoginAPIView.as_view(),
+        name="auth-login",
+    ),
+    path(
+        "auth/logout/",
+        LogoutAPIView.as_view(),
+        name="auth-logout",
+    ),
+    path(
+        "auth/me/",
+        CurrentUserAPIView.as_view(),
+        name="auth-me",
     ),
 ]
