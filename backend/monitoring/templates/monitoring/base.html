@@ -1,0 +1,54 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <title>
+    {{ page_title|default:"Dashboard" }}
+    | Kenya Flood Risk Platform
+  </title>
+  <link
+    rel="stylesheet"
+    href="{% static 'monitoring/css/app.css' %}"
+  >
+  <script
+    src="{% static 'monitoring/js/app.js' %}"
+    defer
+  ></script>
+</head>
+<body
+  data-csrf-url="{% url 'monitoring-api:auth-csrf' %}"
+  data-logout-url="{% url 'monitoring-api:auth-logout' %}"
+  data-login-url="{% url 'monitoring-web:login' %}"
+>
+  <a class="skip-link" href="#main-content">
+    Skip to main content
+  </a>
+
+  <div class="app-shell">
+    {% include "monitoring/includes/sidebar.html" %}
+
+    <div
+      class="sidebar-overlay"
+      data-sidebar-overlay
+      hidden
+    ></div>
+
+    <div class="app-content">
+      {% include "monitoring/includes/header.html" %}
+
+      <main
+        id="main-content"
+        class="page-content"
+        tabindex="-1"
+      >
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+</body>
+</html>

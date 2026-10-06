@@ -1,0 +1,16 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+<section class="empty-card">
+  <p class="eyebrow">Sprint 4</p>
+  <h2>{{ page_title }}</h2>
+  <p>{{ coming_next }}</p>
+
+  <a
+    class="secondary-button"
+    href="{% url 'monitoring-web:dashboard' %}"
+  >
+    Return to dashboard
+  </a>
+</section>
+{% endblock %}

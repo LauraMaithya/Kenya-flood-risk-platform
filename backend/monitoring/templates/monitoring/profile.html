@@ -1,0 +1,28 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+<section class="profile-card">
+  <div class="profile-avatar" aria-hidden="true">
+    {{ request.user.username|first|upper }}
+  </div>
+
+  <div>
+    <p class="eyebrow">Account details</p>
+    <h2>
+      {{ request.user.get_full_name|default:request.user.username }}
+    </h2>
+
+    <dl>
+      <div>
+        <dt>Username</dt>
+        <dd>{{ request.user.username }}</dd>
+      </div>
+
+      <div>
+        <dt>Email</dt>
+        <dd>{{ request.user.email|default:"Not provided" }}</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+{% endblock %}

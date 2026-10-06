@@ -1,0 +1,84 @@
+{% extends "monitoring/auth_base.html" %}
+
+{% block title %}Create account{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <p class="eyebrow">Get started</p>
+  <h2>Create account</h2>
+  <p class="muted">
+    Register to access county flood-risk information.
+  </p>
+
+  <form
+    data-auth-form
+    data-endpoint="{% url 'monitoring-api:auth-register' %}"
+    data-csrf-url="{% url 'monitoring-api:auth-csrf' %}"
+    data-success-url="{{ success_url }}"
+    novalidate
+  >
+    <div class="form-field">
+      <label for="username">Username</label>
+      <input
+        id="username"
+        name="username"
+        autocomplete="username"
+        required
+      >
+    </div>
+
+    <div class="form-field">
+      <label for="email">Email address</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        required
+      >
+    </div>
+
+    <div class="form-field">
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="new-password"
+        required
+      >
+    </div>
+
+    <div class="form-field">
+      <label for="password_confirmation">
+        Confirm password
+      </label>
+      <input
+        id="password_confirmation"
+        name="password_confirmation"
+        type="password"
+        autocomplete="new-password"
+        required
+      >
+    </div>
+
+    <div
+      class="form-message"
+      data-form-message
+      role="alert"
+      aria-live="polite"
+    ></div>
+
+    <button class="primary-button" type="submit">
+      Create account
+    </button>
+  </form>
+
+  <p class="auth-switch">
+    Already registered?
+    <a href="{% url 'monitoring-web:login' %}">
+      Sign in
+    </a>
+  </p>
+</div>
+{% endblock %}
