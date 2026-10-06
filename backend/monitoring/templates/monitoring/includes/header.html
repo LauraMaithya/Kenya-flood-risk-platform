@@ -1,0 +1,30 @@
+<header class="app-header">
+  <button
+    class="icon-button"
+    type="button"
+    data-sidebar-toggle
+    aria-controls="primary-navigation"
+    aria-expanded="true"
+  >
+    <span class="sr-only">Toggle navigation</span>
+    <span aria-hidden="true">☰</span>
+  </button>
+
+  <div>
+    <p class="eyebrow">Kenya Flood Risk Platform</p>
+    <h1>{{ page_title|default:"Dashboard" }}</h1>
+  </div>
+
+  <div class="header-user">
+    <span class="user-avatar" aria-hidden="true">
+      {{ request.user.username|first|upper }}
+    </span>
+
+    <span>
+      <strong>
+        {{ request.user.get_full_name|default:request.user.username }}
+      </strong>
+      <small>{{ request.user.email }}</small>
+    </span>
+  </div>
+</header>

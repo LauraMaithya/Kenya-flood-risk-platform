@@ -1,0 +1,60 @@
+{% extends "monitoring/auth_base.html" %}
+
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <p class="eyebrow">Welcome back</p>
+  <h2>Sign in</h2>
+  <p class="muted">
+    Use your account to open the monitoring dashboard.
+  </p>
+
+  <form
+    data-auth-form
+    data-endpoint="{% url 'monitoring-api:auth-login' %}"
+    data-csrf-url="{% url 'monitoring-api:auth-csrf' %}"
+    data-success-url="{{ success_url }}"
+    novalidate
+  >
+    <div class="form-field">
+      <label for="username">Username</label>
+      <input
+        id="username"
+        name="username"
+        autocomplete="username"
+        required
+      >
+    </div>
+
+    <div class="form-field">
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        required
+      >
+    </div>
+
+    <div
+      class="form-message"
+      data-form-message
+      role="alert"
+      aria-live="polite"
+    ></div>
+
+    <button class="primary-button" type="submit">
+      Sign in
+    </button>
+  </form>
+
+  <p class="auth-switch">
+    Need an account?
+    <a href="{% url 'monitoring-web:register' %}">
+      Create one
+    </a>
+  </p>
+</div>
+{% endblock %}

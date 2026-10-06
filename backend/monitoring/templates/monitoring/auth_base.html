@@ -1,0 +1,43 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <title>
+    {% block title %}Account{% endblock %}
+    | Kenya Flood Risk Platform
+  </title>
+  <link
+    rel="stylesheet"
+    href="{% static 'monitoring/css/auth.css' %}"
+  >
+  <script
+    src="{% static 'monitoring/js/auth.js' %}"
+    defer
+  ></script>
+</head>
+<body class="auth-page">
+  <main class="auth-layout">
+    <section
+      class="auth-brand"
+      aria-labelledby="platform-name"
+    >
+      <div class="brand-mark" aria-hidden="true">K</div>
+      <p class="eyebrow">Flood-risk decision support</p>
+      <h1 id="platform-name">Kenya Flood Risk Platform</h1>
+      <p>
+        County-level environmental monitoring and
+        early-warning support.
+      </p>
+    </section>
+
+    <section class="auth-panel">
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</body>
+</html>

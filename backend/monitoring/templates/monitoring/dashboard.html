@@ -1,0 +1,98 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+<section class="page-intro">
+  <div>
+    <h2>National flood-risk overview</h2>
+    <p>
+      Latest county-level predictions from available
+      environmental observations.
+    </p>
+  </div>
+
+  <p class="data-date">
+    Latest data:
+    <strong>
+      {% if latest_data_date %}
+        {{ latest_data_date|date:"j F Y" }}
+      {% else %}
+        No data available
+      {% endif %}
+    </strong>
+  </p>
+</section>
+
+<section
+  class="kpi-grid"
+  aria-label="Latest flood-risk totals"
+>
+  <article class="kpi-card risk-high">
+    <span>High-risk counties</span>
+    <strong>{{ high_risk_count }}</strong>
+  </article>
+
+  <article class="kpi-card risk-medium">
+    <span>Medium-risk counties</span>
+    <strong>{{ medium_risk_count }}</strong>
+  </article>
+
+  <article class="kpi-card risk-low">
+    <span>Low-risk counties</span>
+    <strong>{{ low_risk_count }}</strong>
+  </article>
+
+  <article class="kpi-card risk-monitored">
+    <span>Counties monitored</span>
+    <strong>{{ monitored_count }}</strong>
+  </article>
+</section>
+
+<section class="map-card" aria-labelledby="map-title">
+  <div class="map-card-header">
+    <div>
+      <p class="eyebrow">National view</p>
+      <h2 id="map-title">Kenya Flood-Risk Overview</h2>
+      <p>
+        Selecting and exploring county risk will be
+        available with the interactive map.
+      </p>
+    </div>
+
+    <div class="county-control">
+      <label for="county-selector">Select county</label>
+      <select id="county-selector" disabled>
+        <option>Interactive selector coming next</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="map-placeholder">
+    <div>
+      <strong>Interactive county heatmap</strong>
+      <p>The Leaflet heatmap will be added in Issue #10.</p>
+    </div>
+  </div>
+
+  <ul
+    class="risk-legend"
+    aria-label="Flood-risk legend"
+  >
+    <li>
+      <span class="legend-dot high"></span>
+      High
+    </li>
+    <li>
+      <span class="legend-dot medium"></span>
+      Medium
+    </li>
+    <li>
+      <span class="legend-dot low"></span>
+      Low
+    </li>
+    <li>
+      <span class="legend-dot unavailable"></span>
+      No current data
+    </li>
+  </ul>
+</section>
+{% endblock %}

@@ -165,3 +165,7 @@ REST_FRAMEWORK = {
     ),
     "PAGE_SIZE": 50,
 }
+
+LOGIN_URL = "monitoring-web:login"
+LOGIN_REDIRECT_URL = "monitoring-web:dashboard"
+LOGOUT_REDIRECT_URL = "monitoring-web:login"

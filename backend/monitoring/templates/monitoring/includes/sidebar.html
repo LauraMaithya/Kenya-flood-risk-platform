@@ -1,0 +1,69 @@
+{% with active=request.resolver_match.url_name %}
+<aside
+  class="sidebar"
+  id="primary-navigation"
+  data-sidebar
+>
+  <div class="sidebar-brand">
+    <span class="brand-mark" aria-hidden="true">K</span>
+    <span class="sidebar-label">Kenya Flood Risk</span>
+  </div>
+
+  <nav aria-label="Primary navigation">
+    <a
+      href="{% url 'monitoring-web:dashboard' %}"
+      {% if active == "dashboard" %}aria-current="page"{% endif %}
+      title="Dashboard"
+    >
+      <span aria-hidden="true">⌂</span>
+      <span class="sidebar-label">Dashboard</span>
+    </a>
+
+    <a
+      href="{% url 'monitoring-web:county-risk' %}"
+      {% if active == "county-risk" %}aria-current="page"{% endif %}
+      title="County Risk"
+    >
+      <span aria-hidden="true">◉</span>
+      <span class="sidebar-label">County Risk</span>
+    </a>
+
+    <a
+      href="{% url 'monitoring-web:historical-data' %}"
+      {% if active == "historical-data" %}aria-current="page"{% endif %}
+      title="Historical Data"
+    >
+      <span aria-hidden="true">▤</span>
+      <span class="sidebar-label">Historical Data</span>
+    </a>
+
+    <a
+      href="{% url 'monitoring-web:alerts' %}"
+      {% if active == "alerts" %}aria-current="page"{% endif %}
+      title="Alerts"
+    >
+      <span aria-hidden="true">!</span>
+      <span class="sidebar-label">Alerts</span>
+    </a>
+
+    <a
+      href="{% url 'monitoring-web:profile' %}"
+      {% if active == "profile" %}aria-current="page"{% endif %}
+      title="User Profile"
+    >
+      <span aria-hidden="true">●</span>
+      <span class="sidebar-label">User Profile</span>
+    </a>
+  </nav>
+
+  <button
+    class="sidebar-logout"
+    type="button"
+    data-logout
+    title="Logout"
+  >
+    <span aria-hidden="true">↪</span>
+    <span class="sidebar-label">Logout</span>
+  </button>
+</aside>
+{% endwith %}
