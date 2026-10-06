@@ -15,6 +15,7 @@
     rel="stylesheet"
     href="{% static 'monitoring/css/app.css' %}"
   >
+  {% block extra_head %}{% endblock %}
   <script
     src="{% static 'monitoring/js/app.js' %}"
     defer
@@ -50,5 +51,6 @@
       </main>
     </div>
   </div>
+  {% block extra_scripts %}{% endblock %}
 </body>
 </html>
