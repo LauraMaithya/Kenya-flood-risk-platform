@@ -1,5 +1,6 @@
 from datetime import date
-from rest_framework.permissions import AllowAny
+from django.db.models import OuterRef, Subquery
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     ListAPIView,
@@ -44,6 +45,112 @@ class HealthAPIView(APIView):
             {
                 "status": "ok",
                 "service": "Kenya Flood Risk Platform API",
+            }
+        )
+
+class DashboardMapAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        latest_prediction = (
+            FloodPrediction.objects.filter(
+                observation__county_id=OuterRef("pk"),
+                observation__is_synthetic=False,
+            )
+            .order_by(
+                "-observation__observation_date",
+                "-predicted_at",
+                "-pk",
+            )
+            .values("pk")[:1]
+        )
+
+        counties = list(
+            County.objects.annotate(
+                latest_prediction_id=Subquery(
+                    latest_prediction
+                )
+            ).order_by("name")
+        )
+
+        prediction_ids = [
+            county.latest_prediction_id
+            for county in counties
+            if county.latest_prediction_id is not None
+        ]
+
+        predictions = (
+            FloodPrediction.objects.select_related(
+                "observation__county"
+            )
+            .filter(pk__in=prediction_ids)
+        )
+
+        predictions_by_id = {
+            prediction.pk: prediction
+            for prediction in predictions
+        }
+
+        results = []
+
+        for county in counties:
+            prediction = predictions_by_id.get(
+                county.latest_prediction_id
+            )
+
+            item = {
+                "county_id": county.pk,
+                "county_code": county.code,
+                "county_name": county.name,
+                "county_slug": county.slug,
+                "latitude": (
+                    float(county.latitude)
+                    if county.latitude is not None
+                    else None
+                ),
+                "longitude": (
+                    float(county.longitude)
+                    if county.longitude is not None
+                    else None
+                ),
+                "has_coordinates": (
+                    county.latitude is not None
+                    and county.longitude is not None
+                ),
+                "has_nasa_power_coverage": (
+                    county.has_nasa_power_coverage
+                ),
+                "data_status": "NO_DATA",
+                "risk_level": None,
+                "observation_date": None,
+                "probability_high": None,
+                "model_release_id": None,
+            }
+
+            if prediction is not None:
+                item.update(
+                    {
+                        "data_status": "AVAILABLE",
+                        "risk_level": prediction.risk_level,
+                        "observation_date": (
+                            prediction.observation
+                            .observation_date.isoformat()
+                        ),
+                        "probability_high": float(
+                            prediction.probability_high
+                        ),
+                        "model_release_id": (
+                            prediction.model_release_id
+                        ),
+                    }
+                )
+
+            results.append(item)
+
+        return Response(
+            {
+                "count": len(results),
+                "results": results,
             }
         )
 

@@ -596,8 +596,227 @@ select:focus-visible {
   .profile-card {
     flex-direction: column;
   }
+    .kenya-risk-map {
+    min-height: 420px;
+  }
+
+  .map-footer {
+    flex-direction: column;
+  }
+
+  .map-guidance {
+    margin-top: 0;
+  }
+}
+.map-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #edf5f3;
 }
 
+.kenya-risk-map {
+  z-index: 1;
+  width: 100%;
+  min-height: 520px;
+  background: #edf5f3;
+}
+.kenya-risk-map .leaflet-tooltip {
+  padding: 0.3rem 0.45rem;
+  border: 1px solid #cbdde3;
+  border-radius: 7px;
+  color: var(--navy);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 12px rgba(15, 42, 67, 0.12);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.kenya-risk-map .leaflet-tooltip::before {
+  display: none;
+}
+.map-status {
+  position: absolute;
+  z-index: 500;
+  top: 1rem;
+  left: 50%;
+  max-width: calc(100% - 2rem);
+  padding: 0.75rem 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  color: #1e3a5f;
+  background: rgba(239, 246, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(15, 42, 67, 0.14);
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.map-status[hidden] {
+  display: none;
+}
+
+.map-status[data-state="error"] {
+  border-color: #fecaca;
+  color: #991b1b;
+  background: rgba(254, 242, 242, 0.97);
+}
+
+.map-status[data-state="warning"] {
+  border-color: #fde68a;
+  color: #92400e;
+  background: rgba(255, 251, 235, 0.97);
+}
+
+.map-status[data-state="empty"] {
+  border-color: #cbd5e1;
+  color: #475569;
+  background: rgba(248, 250, 252, 0.97);
+}
+
+.map-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.map-guidance {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.map-error {
+  margin: 1rem 0 0;
+  padding: 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.risk-marker-wrapper {
+  border: 0;
+  background: transparent;
+}
+
+.risk-marker {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px rgba(15, 23, 42, 0.16),
+    0 4px 12px rgba(15, 23, 42, 0.28);
+}
+
+.risk-marker.high {
+  background: var(--high);
+}
+
+.risk-marker.medium {
+  background: var(--medium);
+}
+
+.risk-marker.low {
+  background: var(--low);
+}
+
+.risk-marker.unavailable {
+  background: var(--unavailable);
+}
+
+.risk-marker.low::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid rgba(21, 128, 61, 0.42);
+  border-radius: 50%;
+  animation: safe-marker-pulse 2.8s ease-out infinite;
+}
+
+@keyframes safe-marker-pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.7);
+  }
+
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+.county-popup {
+  min-width: 185px;
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.county-popup strong {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--navy);
+  font-size: 0.98rem;
+}
+
+.county-popup p {
+  margin: 0.3rem 0;
+  color: var(--muted);
+  font-size: 0.83rem;
+}
+
+.county-popup .popup-risk {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.popup-risk.risk-high {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.popup-risk.risk-medium {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.popup-risk.risk-low {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.popup-risk.risk-unavailable {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.leaflet-container {
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.leaflet-control-zoom a {
+  color: var(--navy);
+}
+
+.leaflet-control-attribution {
+  color: #475569;
+  font-size: 0.65rem;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -606,4 +825,31 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+    .risk-marker.low::after {
+    display: none;
+  }
+}
+.county-map-tooltip {
+    border: 1px solid #b9d1d3;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    color: #173f49;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.4rem 0.6rem;
+    box-shadow: 0 0.35rem 1rem rgb(35 75 85 / 18%);
+    pointer-events: none;
+}
+#kenya-risk-map .leaflet-overlay-pane {
+    pointer-events: auto;
+}
+
+#kenya-risk-map .leaflet-interactive {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+#kenya-risk-map .leaflet-tooltip-pane {
+    pointer-events: none;
+    z-index: 700;
 }

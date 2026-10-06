@@ -4,6 +4,7 @@ from monitoring.api_views import (
     AlertNotificationListAPIView,
     CountyDetailAPIView,
     CountyListAPIView,
+    DashboardMapAPIView,
     EnvironmentalObservationListAPIView,
     FloodPredictionListAPIView,
     HealthAPIView,
@@ -21,6 +22,11 @@ app_name = "monitoring-api"
 
 urlpatterns = [
     path("health/", HealthAPIView.as_view(), name="health"),
+    path(
+    "dashboard/map/",
+    DashboardMapAPIView.as_view(),
+    name="dashboard-map",
+    ),
     path(
         "counties/",
         CountyListAPIView.as_view(),

@@ -1,4 +1,14 @@
 {% extends "monitoring/base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{% static 'monitoring/vendor/leaflet/leaflet.css' %}"
+  integrity="sha256-p4NxAoJBhIINfQ3ynhZKJrjMZg0n4ZGTZmKEs2VNTc="
+  crossorigin=""
+>
+{% endblock %}
 
 {% block content %}
 <section class="page-intro">
@@ -51,48 +61,87 @@
   <div class="map-card-header">
     <div>
       <p class="eyebrow">National view</p>
-      <h2 id="map-title">Kenya Flood-Risk Overview</h2>
+      <h2 id="map-title">Kenya Flood-Risk Heatmap</h2>
       <p>
-        Selecting and exploring county risk will be
-        available with the interactive map.
+        Heat intensity and marker colour show each county's
+        latest available flood-risk classification.
       </p>
     </div>
 
     <div class="county-control">
       <label for="county-selector">Select county</label>
       <select id="county-selector" disabled>
-        <option>Interactive selector coming next</option>
+        <option>County selection comes in Issue #11</option>
       </select>
     </div>
   </div>
 
-  <div class="map-placeholder">
-    <div>
-      <strong>Interactive county heatmap</strong>
-      <p>The Leaflet heatmap will be added in Issue #10.</p>
+  <div class="map-frame">
+    <div
+      id="kenya-risk-map"
+      class="kenya-risk-map"
+      data-map-url="{% url 'monitoring-api:dashboard-map' %}"
+      data-boundary-url="{% static 'monitoring/data/kenya_adm1.geojson' %}"
+      role="region"
+      aria-label="Interactive Kenya county flood-risk heatmap"
+    ></div>
+
+    <div
+      class="map-status"
+      data-map-status
+      role="status"
+      aria-live="polite"
+    >
+      Loading current county risk data…
     </div>
   </div>
 
-  <ul
-    class="risk-legend"
-    aria-label="Flood-risk legend"
-  >
-    <li>
-      <span class="legend-dot high"></span>
-      High
-    </li>
-    <li>
-      <span class="legend-dot medium"></span>
-      Medium
-    </li>
-    <li>
-      <span class="legend-dot low"></span>
-      Low
-    </li>
-    <li>
-      <span class="legend-dot unavailable"></span>
-      No current data
-    </li>
-  </ul>
+  <div class="map-footer">
+    <ul
+      class="risk-legend"
+      aria-label="Flood-risk legend"
+    >
+      <li>
+        <span class="legend-dot high"></span>
+        High
+      </li>
+      <li>
+        <span class="legend-dot medium"></span>
+        Medium
+      </li>
+      <li>
+        <span class="legend-dot low"></span>
+        Low
+      </li>
+      <li>
+        <span class="legend-dot unavailable"></span>
+        No current data
+      </li>
+    </ul>
+
+    <p class="map-guidance">
+      Select a marker to view the county's latest result.
+    </p>
+  </div>
+
+  <noscript>
+    <p class="map-error">
+      JavaScript is required to display the interactive map.
+    </p>
+  </noscript>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+<script
+  src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"
+></script>
+<script
+  src="{% static 'monitoring/js/risk_map.js' %}"
+></script>
 {% endblock %}
