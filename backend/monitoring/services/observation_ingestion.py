@@ -195,7 +195,11 @@ def ingest_observations(csv_path, dry_run=False):
                 )
             seen_keys.add(key)
 
-            angle = (2 * math.pi * observation_date.month) / 12
+            angle = (
+                2
+                * math.pi
+                * (observation_date.month - 1)
+            ) / 12
 
             values = {
                 "precipitation_max_mm": _parse_decimal(

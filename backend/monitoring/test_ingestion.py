@@ -84,12 +84,12 @@ class ObservationIngestionTests(TestCase):
         )
         self.assertAlmostEqual(
             float(observation.month_sin),
-            0.5,
+            0.0,
             places=6,
         )
         self.assertAlmostEqual(
             float(observation.month_cos),
-            0.8660254,
+            1.0,
             places=6,
         )
         self.assertFalse(observation.is_synthetic)
