@@ -1,0 +1,195 @@
+{% extends "monitoring/base.html" %}
+
+{% block title %}Historical Data{% endblock %}
+
+{% block content %}
+<section class="page-intro">
+  <div>
+    <h2>Historical flood-risk records</h2>
+    <p>
+      Review and download real county-level flood-risk predictions.
+    </p>
+  </div>
+
+  <a
+    class="button button-primary"
+    href="{% url 'monitoring-web:historical-data-download' %}{% if download_query %}?{{ download_query }}{% endif %}"
+  >
+    Download CSV
+  </a>
+</section>
+
+<section
+  class="historical-filter-card"
+  aria-labelledby="historical-filter-title"
+>
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Filter records</p>
+      <h3 id="historical-filter-title">
+        Select a county, date range or risk level
+      </h3>
+    </div>
+
+    <a
+      class="historical-clear-link"
+      href="{% url 'monitoring-web:historical-data' %}"
+    >
+      Clear filters
+    </a>
+  </div>
+
+  <form method="get" class="historical-filter-form">
+    <div class="historical-filter-field">
+      <label for="{{ filter_form.county.id_for_label }}">
+        County
+      </label>
+      {{ filter_form.county }}
+      {{ filter_form.county.errors }}
+    </div>
+
+    <div class="historical-filter-field">
+      <label for="{{ filter_form.risk_level.id_for_label }}">
+        Risk level
+      </label>
+      {{ filter_form.risk_level }}
+      {{ filter_form.risk_level.errors }}
+    </div>
+
+    <div class="historical-filter-field">
+      <label for="{{ filter_form.start_date.id_for_label }}">
+        Start date
+      </label>
+      {{ filter_form.start_date }}
+      {{ filter_form.start_date.errors }}
+    </div>
+
+    <div class="historical-filter-field">
+      <label for="{{ filter_form.end_date.id_for_label }}">
+        End date
+      </label>
+      {{ filter_form.end_date }}
+      {{ filter_form.end_date.errors }}
+    </div>
+
+    <button type="submit" class="button button-primary">
+      Apply filters
+    </button>
+  </form>
+
+  {% if filter_form.non_field_errors %}
+    <div class="form-message error" role="alert">
+      {{ filter_form.non_field_errors }}
+    </div>
+  {% endif %}
+</section>
+
+<section
+  class="historical-results-card"
+  aria-labelledby="historical-results-title"
+>
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Prediction history</p>
+      <h3 id="historical-results-title">
+        Historical records
+      </h3>
+    </div>
+
+    <p class="historical-result-count">
+      {{ result_count }}
+      record{{ result_count|pluralize }}
+    </p>
+  </div>
+
+  {% if predictions %}
+    <div class="historical-table-wrapper">
+      <table class="historical-table">
+        <thead>
+          <tr>
+            <th scope="col">County</th>
+            <th scope="col">Observation date</th>
+            <th scope="col">Risk level</th>
+            <th scope="col">Low probability</th>
+            <th scope="col">Medium probability</th>
+            <th scope="col">High probability</th>
+            <th scope="col">Model release</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for prediction in predictions %}
+            <tr>
+              <td>
+                <strong>
+                  {{ prediction.observation.county.name }}
+                </strong>
+                <small>
+                  {{ prediction.observation.county.code }}
+                </small>
+              </td>
+              <td>
+                {{ prediction.observation.observation_date|date:"Y-m-d" }}
+              </td>
+              <td>
+                <span
+                  class="history-risk-badge risk-{{ prediction.risk_level|lower }}"
+                >
+                  {{ prediction.risk_level }}
+                </span>
+              </td>
+              <td>
+                {{ prediction.probability_low|floatformat:3 }}
+              </td>
+              <td>
+                {{ prediction.probability_medium|floatformat:3 }}
+              </td>
+              <td>
+                {{ prediction.probability_high|floatformat:3 }}
+              </td>
+              <td>{{ prediction.model_release_id }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <nav
+        class="historical-pagination"
+        aria-label="Historical data pages"
+      >
+        {% if page_obj.has_previous %}
+          <a
+            href="?{% if download_query %}{{ download_query }}&{% endif %}page={{ page_obj.previous_page_number }}"
+          >
+            Previous
+          </a>
+        {% endif %}
+
+        <span>
+          Page {{ page_obj.number }} of
+          {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a
+            href="?{% if download_query %}{{ download_query }}&{% endif %}page={{ page_obj.next_page_number }}"
+          >
+            Next
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="historical-empty-state">
+      <h4>No historical records found</h4>
+      <p>
+        No real flood-risk predictions match the selected filters.
+        Import observations and generate predictions to populate
+        this page.
+      </p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
