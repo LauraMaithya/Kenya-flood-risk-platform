@@ -1,6 +1,10 @@
 from django import forms
 
-from monitoring.models import County, FloodPrediction
+from monitoring.models import (
+    AlertNotification,
+    County,
+    FloodPrediction,
+)
 
 
 class HistoricalDataFilterForm(forms.Form):
@@ -51,3 +55,31 @@ class HistoricalDataFilterForm(forms.Form):
             )
 
         return cleaned_data
+
+class AlertFilterForm(forms.Form):
+    county = forms.ModelChoiceField(
+        queryset=County.objects.none(),
+        required=False,
+        empty_label="All counties",
+        to_field_name="slug",
+    )
+    channel = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "All channels"),
+            *AlertNotification.Channel.choices,
+        ],
+    )
+    status = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "All statuses"),
+            *AlertNotification.Status.choices,
+        ],
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["county"].queryset = (
+            County.objects.order_by("name")
+        )
