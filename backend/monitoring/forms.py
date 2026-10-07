@@ -6,7 +6,19 @@ from monitoring.models import (
     FloodPrediction,
 )
 
+class CountyRiskFilterForm(forms.Form):
+    county = forms.ModelChoiceField(
+        queryset=County.objects.none(),
+        required=True,
+        empty_label="Select a county",
+        to_field_name="slug",
+    )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["county"].queryset = (
+            County.objects.order_by("name")
+        )
 class HistoricalDataFilterForm(forms.Form):
     county = forms.ModelChoiceField(
         queryset=County.objects.none(),

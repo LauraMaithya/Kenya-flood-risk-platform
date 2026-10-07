@@ -1501,3 +1501,320 @@ select:focus-visible {
     padding: 1rem;
   }
 }
+.county-risk-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.county-detail-filter-card,
+.county-detail-heading-card,
+.county-detail-card,
+.county-detail-history-card {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.county-detail-filter-form {
+  display: flex;
+  align-items: end;
+  gap: 0.85rem;
+}
+
+.county-detail-filter-field {
+  display: grid;
+  flex: 1;
+  gap: 0.4rem;
+  max-width: 440px;
+}
+
+.county-detail-filter-field label {
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.county-detail-filter-field select {
+  width: 100%;
+  min-height: 43px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  background: #ffffff;
+  font: inherit;
+}
+
+.county-detail-filter-field .errorlist {
+  margin: 0;
+  padding: 0;
+  color: #b91c1c;
+  font-size: 0.75rem;
+  list-style: none;
+}
+
+.county-detail-heading-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.county-detail-heading-card h3 {
+  margin: 0.2rem 0 0;
+  color: var(--text);
+  font-size: 1.45rem;
+}
+
+.county-detail-heading-card p:last-child {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.county-detail-risk-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  color: #475569;
+  background: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.county-detail-risk-badge[data-risk="Low"] {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.county-detail-risk-badge[data-risk="Medium"] {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.county-detail-risk-badge[data-risk="High"] {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.county-detail-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.county-detail-summary-card {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 1.1rem;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--teal);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.county-detail-summary-card span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.county-detail-summary-card strong {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 1.15rem;
+}
+
+.county-detail-model-id {
+  font-size: 0.82rem !important;
+  line-height: 1.4;
+}
+
+.county-detail-content-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.4fr);
+  gap: 1rem;
+}
+
+.county-probability-list,
+.county-model-details,
+.county-measurement-grid {
+  margin: 0;
+}
+
+.county-probability-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.county-probability-list div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.county-probability-list dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.county-probability-list dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.county-model-details {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.county-model-details div,
+.county-measurement-grid div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.county-model-details dt,
+.county-measurement-grid dt {
+  color: var(--muted);
+  font-size: 0.73rem;
+  font-weight: 750;
+}
+
+.county-model-details dd,
+.county-measurement-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.county-measurement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.county-measurement-grid div {
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.county-history-link {
+  color: var(--teal);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.county-history-link:hover {
+  text-decoration: underline;
+}
+
+.county-history-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.county-history-table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+}
+
+.county-history-table th,
+.county-history-table td {
+  padding: 0.8rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.county-history-table th {
+  color: #475569;
+  background: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.county-history-table td {
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.county-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.county-detail-empty-state {
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  text-align: center;
+  background: #f8fafc;
+}
+
+.county-detail-empty-state h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.county-detail-empty-state p {
+  max-width: 36rem;
+  margin: 0.55rem auto 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 980px) {
+  .county-detail-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .county-detail-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .county-detail-filter-form,
+  .county-detail-heading-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .county-detail-summary-grid,
+  .county-measurement-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .county-detail-filter-card,
+  .county-detail-heading-card,
+  .county-detail-card,
+  .county-detail-history-card {
+    padding: 1rem;
+  }
+}
