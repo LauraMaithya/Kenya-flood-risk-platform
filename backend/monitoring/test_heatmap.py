@@ -296,7 +296,7 @@ class DashboardMapAPITests(APITestCase):
             "leaflet@1.9.4",
         )
 
-    def test_dashboard_preserves_disabled_county_selector(self):
+    def test_dashboard_contains_county_selector_contract(self):
         self.client.force_login(self.user)
 
         response = self.client.get(
@@ -305,9 +305,13 @@ class DashboardMapAPITests(APITestCase):
 
         self.assertContains(
             response,
-            'id="county-selector" disabled',
+            'id="county-selector"',
         )
         self.assertContains(
             response,
-            "County selection comes in Issue #11",
+            "Select a county to zoom in and view its current risk.",
+        )
+        self.assertContains(
+            response,
+            "data-county-risk-card",
         )
