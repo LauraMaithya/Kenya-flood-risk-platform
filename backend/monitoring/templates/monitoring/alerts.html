@@ -1,0 +1,206 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+<section class="alerts-page">
+  <div class="page-introduction">
+    <div>
+      <p class="eyebrow">Flood-risk notifications</p>
+      <h2>Alert monitoring</h2>
+      <p>
+        Review notifications generated from genuine High-risk
+        flood predictions.
+      </p>
+    </div>
+  </div>
+
+  <section
+    class="alert-summary-grid"
+    aria-label="Alert status summary"
+  >
+    <article class="alert-summary-card">
+      <span>Total alerts</span>
+      <strong>{{ total_alert_count }}</strong>
+    </article>
+
+    <article class="alert-summary-card alert-summary-pending">
+      <span>Pending</span>
+      <strong>{{ pending_alert_count }}</strong>
+    </article>
+
+    <article class="alert-summary-card alert-summary-sent">
+      <span>Sent</span>
+      <strong>{{ sent_alert_count }}</strong>
+    </article>
+
+    <article class="alert-summary-card alert-summary-failed">
+      <span>Failed</span>
+      <strong>{{ failed_alert_count }}</strong>
+    </article>
+  </section>
+
+  <section class="alert-filter-card">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Filter alerts</p>
+        <h3>Notification records</h3>
+      </div>
+
+      <a
+        class="alert-clear-link"
+        href="{% url 'monitoring-web:alerts' %}"
+      >
+        Clear filters
+      </a>
+    </div>
+
+    <form method="get" class="alert-filter-form">
+      <div class="alert-filter-field">
+        <label for="{{ filter_form.county.id_for_label }}">
+          County
+        </label>
+        {{ filter_form.county }}
+        {{ filter_form.county.errors }}
+      </div>
+
+      <div class="alert-filter-field">
+        <label for="{{ filter_form.channel.id_for_label }}">
+          Channel
+        </label>
+        {{ filter_form.channel }}
+        {{ filter_form.channel.errors }}
+      </div>
+
+      <div class="alert-filter-field">
+        <label for="{{ filter_form.status.id_for_label }}">
+          Status
+        </label>
+        {{ filter_form.status }}
+        {{ filter_form.status.errors }}
+      </div>
+
+      <button class="primary-button" type="submit">
+        Apply filters
+      </button>
+    </form>
+  </section>
+
+  <section class="alert-results-card">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Alert history</p>
+        <h3>Generated notifications</h3>
+      </div>
+
+      <p class="alert-result-count">
+        {{ result_count }}
+        alert{{ result_count|pluralize }}
+      </p>
+    </div>
+
+    {% if alerts %}
+      <div class="alert-table-wrapper">
+        <table class="alert-table">
+          <thead>
+            <tr>
+              <th scope="col">County</th>
+              <th scope="col">Observation</th>
+              <th scope="col">Channel</th>
+              <th scope="col">Recipient</th>
+              <th scope="col">Status</th>
+              <th scope="col">Message</th>
+              <th scope="col">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for alert in alerts %}
+              <tr>
+                <td>
+                  <strong>
+                    {{ alert.prediction.observation.county.name }}
+                  </strong>
+                </td>
+                <td>
+                  {{ alert.prediction.observation.observation_date }}
+                </td>
+                <td>
+                  <span
+                    class="alert-channel-badge"
+                    data-channel="{{ alert.channel }}"
+                  >
+                    {{ alert.get_channel_display }}
+                  </span>
+                </td>
+                <td>{{ alert.recipient }}</td>
+                <td>
+                  <span
+                    class="alert-status-badge"
+                    data-status="{{ alert.status }}"
+                  >
+                    {{ alert.get_status_display }}
+                  </span>
+
+                  {% if alert.status == "FAILED" %}
+                    <small class="alert-failure-reason">
+                      {{ alert.failure_reason }}
+                    </small>
+                  {% endif %}
+                </td>
+                <td class="alert-message">
+                  {{ alert.message }}
+                </td>
+                <td>
+                  <time datetime="{{ alert.created_at|date:'c' }}">
+                    {{ alert.created_at|date:"d M Y, H:i" }}
+                  </time>
+
+                  {% if alert.sent_at %}
+                    <small class="alert-sent-time">
+                      Sent {{ alert.sent_at|date:"d M Y, H:i" }}
+                    </small>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if page_obj.has_other_pages %}
+        <nav
+          class="pagination"
+          aria-label="Alert result pages"
+        >
+          {% if page_obj.has_previous %}
+            <a
+              href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}"
+            >
+              Previous
+            </a>
+          {% endif %}
+
+          <span>
+            Page {{ page_obj.number }}
+            of {{ page_obj.paginator.num_pages }}
+          </span>
+
+          {% if page_obj.has_next %}
+            <a
+              href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}"
+            >
+              Next
+            </a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="alert-empty-state">
+        <h4>No alerts found</h4>
+        <p>
+          No genuine High-risk notification records match the
+          selected filters.
+        </p>
+      </div>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

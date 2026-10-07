@@ -10,9 +10,16 @@ from django.views.generic import TemplateView
 from monitoring.models import County, FloodPrediction
 from django.core.paginator import Paginator
 from django.http import HttpResponse
-from monitoring.forms import HistoricalDataFilterForm
+from monitoring.forms import (
+    AlertFilterForm,
+    HistoricalDataFilterForm,
+)
 from monitoring.services.historical_data import (
     historical_prediction_queryset,
+)
+from monitoring.services.alert_history import (
+    alert_notification_queryset,
+    alert_status_summary,
 )
 
 class RootRedirectView(View):
@@ -241,14 +248,44 @@ class HistoricalDataDownloadView(
 
 
 class AlertsPageView(ProtectedPageView):
-    template_name = "monitoring/placeholder.html"
-    extra_context = {
-        "page_title": "Alerts",
-        "coming_next": (
-            "The alert interface will be completed in a later "
-            "Sprint 4 issue."
-        ),
-    }
+    template_name = "monitoring/alerts.html"
+    extra_context = {"page_title": "Alerts"}
+    paginate_by = 25
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = AlertFilterForm(self.request.GET)
+
+        if form.is_valid():
+            alerts = alert_notification_queryset(
+                form.cleaned_data
+            )
+        else:
+            alerts = alert_notification_queryset().none()
+
+        summary = alert_status_summary(alerts)
+        paginator = Paginator(alerts, self.paginate_by)
+        page_obj = paginator.get_page(
+            self.request.GET.get("page")
+        )
+
+        pagination_parameters = self.request.GET.copy()
+        pagination_parameters.pop("page", None)
+
+        context.update(
+            {
+                "filter_form": form,
+                "alerts": page_obj.object_list,
+                "page_obj": page_obj,
+                "result_count": paginator.count,
+                "pagination_query": (
+                    pagination_parameters.urlencode()
+                ),
+                **summary,
+            }
+        )
+
+        return context
 
 
 class ProfilePageView(ProtectedPageView):
