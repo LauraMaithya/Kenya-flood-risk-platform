@@ -4,6 +4,7 @@ from monitoring.web_views import (
     AlertsPageView,
     CountyRiskView,
     DashboardView,
+    HistoricalDataDownloadView,
     HistoricalDataView,
     LoginPageView,
     ProfilePageView,
@@ -40,6 +41,11 @@ urlpatterns = [
         "historical-data/",
         HistoricalDataView.as_view(),
         name="historical-data",
+    ),
+    path(
+    "historical-data/download/",
+    HistoricalDataDownloadView.as_view(),
+    name="historical-data-download",
     ),
     path(
         "alerts/",

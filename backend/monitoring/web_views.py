@@ -1,3 +1,4 @@
+import csv
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Max, OuterRef, Q, Subquery
 from django.shortcuts import redirect
@@ -7,7 +8,12 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from monitoring.models import County, FloodPrediction
-
+from django.core.paginator import Paginator
+from django.http import HttpResponse
+from monitoring.forms import HistoricalDataFilterForm
+from monitoring.services.historical_data import (
+    historical_prediction_queryset,
+)
 
 class RootRedirectView(View):
     def get(self, request):
@@ -119,14 +125,119 @@ class CountyRiskView(ProtectedPageView):
 
 
 class HistoricalDataView(ProtectedPageView):
-    template_name = "monitoring/placeholder.html"
+    template_name = "monitoring/historical_data.html"
     extra_context = {
         "page_title": "Historical Data",
-        "coming_next": (
-            "Historical filtering and downloads will be added "
-            "in Issue #12."
-        ),
     }
+    paginate_by = 25
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        form = HistoricalDataFilterForm(
+            self.request.GET
+        )
+
+        if form.is_valid():
+            predictions = historical_prediction_queryset(
+                form.cleaned_data
+            )
+        else:
+            predictions = FloodPrediction.objects.none()
+
+        paginator = Paginator(
+            predictions,
+            self.paginate_by,
+        )
+        page_obj = paginator.get_page(
+            self.request.GET.get("page")
+        )
+
+        download_parameters = (
+            self.request.GET.copy()
+        )
+        download_parameters.pop("page", None)
+
+        context.update(
+            {
+                "filter_form": form,
+                "page_obj": page_obj,
+                "predictions": page_obj.object_list,
+                "result_count": paginator.count,
+                "download_query": (
+                    download_parameters.urlencode()
+                ),
+            }
+        )
+
+        return context
+
+class HistoricalDataDownloadView(
+    LoginRequiredMixin,
+    View,
+):
+    login_url = "monitoring-web:login"
+
+    def get(self, request):
+        form = HistoricalDataFilterForm(
+            request.GET
+        )
+
+        if not form.is_valid():
+            return HttpResponse(
+                "Invalid historical-data filters.",
+                status=400,
+                content_type="text/plain",
+            )
+
+        predictions = historical_prediction_queryset(
+            form.cleaned_data
+        )
+
+        response = HttpResponse(
+            content_type="text/csv",
+        )
+        response["Content-Disposition"] = (
+            'attachment; filename="'
+            'kenya_flood_risk_history.csv"'
+        )
+
+        writer = csv.writer(response)
+        writer.writerow(
+            [
+                "county_code",
+                "county_name",
+                "observation_date",
+                "risk_level",
+                "probability_low",
+                "probability_medium",
+                "probability_high",
+                "model_release_id",
+                "decision_rule",
+                "predicted_at",
+            ]
+        )
+
+        for prediction in predictions.iterator():
+            observation = prediction.observation
+            county = observation.county
+
+            writer.writerow(
+                [
+                    county.code,
+                    county.name,
+                    observation.observation_date.isoformat(),
+                    prediction.risk_level,
+                    prediction.probability_low,
+                    prediction.probability_medium,
+                    prediction.probability_high,
+                    prediction.model_release_id,
+                    prediction.decision_rule,
+                    prediction.predicted_at.isoformat(),
+                ]
+            )
+
+        return response
 
 
 class AlertsPageView(ProtectedPageView):
