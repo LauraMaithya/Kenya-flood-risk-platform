@@ -12,6 +12,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from monitoring.forms import (
     AlertFilterForm,
+    CountyRiskFilterForm,
     HistoricalDataFilterForm,
 )
 from monitoring.services.historical_data import (
@@ -20,6 +21,10 @@ from monitoring.services.historical_data import (
 from monitoring.services.alert_history import (
     alert_notification_queryset,
     alert_status_summary,
+)
+from monitoring.services.county_risk import (
+    latest_county_prediction,
+    recent_county_predictions,
 )
 
 class RootRedirectView(View):
@@ -121,14 +126,49 @@ class DashboardView(ProtectedPageView):
 
 
 class CountyRiskView(ProtectedPageView):
-    template_name = "monitoring/placeholder.html"
-    extra_context = {
-        "page_title": "County Risk",
-        "coming_next": (
-            "Interactive county risk details will be added "
-            "in Issue #11."
-        ),
-    }
+    template_name = "monitoring/county_risk.html"
+    extra_context = {"page_title": "County Risk"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form_data = (
+            self.request.GET
+            if "county" in self.request.GET
+            else None
+        )
+        form = CountyRiskFilterForm(form_data)
+
+        selected_county = None
+        latest_prediction = None
+        recent_predictions = []
+
+        if form.is_bound and form.is_valid():
+            selected_county = form.cleaned_data["county"]
+            latest_prediction = latest_county_prediction(
+                selected_county
+            )
+            recent_predictions = recent_county_predictions(
+                selected_county
+            )
+
+        context.update(
+            {
+                "county_form": form,
+                "county_count": (
+                    form.fields["county"].queryset.count()
+                ),
+                "selected_county": selected_county,
+                "latest_prediction": latest_prediction,
+                "latest_observation": (
+                    latest_prediction.observation
+                    if latest_prediction
+                    else None
+                ),
+                "recent_predictions": recent_predictions,
+            }
+        )
+
+        return context
 
 
 class HistoricalDataView(ProtectedPageView):
