@@ -67,13 +67,6 @@
         latest available flood-risk classification.
       </p>
     </div>
-
-    <div class="county-control">
-      <label for="county-selector">Select county</label>
-      <select id="county-selector" disabled>
-        <option>County selection comes in Issue #11</option>
-      </select>
-    </div>
   </div>
 
   <div class="map-frame">
@@ -86,6 +79,37 @@
       aria-label="Interactive Kenya county flood-risk heatmap"
     ></div>
 
+    <div class="map-county-overlay">
+      <div class="county-control">
+        <p class="eyebrow">Location selector</p>
+        <label for="county-selector">County</label>
+
+        <div class="county-selector-row">
+          <select
+            id="county-selector"
+            data-county-selector
+            aria-describedby="county-selector-help"
+            disabled
+          >
+            <option value="">Loading counties&hellip;</option>
+          </select>
+
+          <button
+            type="button"
+            class="button button-secondary county-reset-button"
+            data-county-reset
+            disabled
+          >
+            Reset map
+          </button>
+        </div>
+
+        <small id="county-selector-help">
+          Select a county to zoom in and view its current risk.
+        </small>
+      </div>
+    </div>
+
     <div
       class="map-status"
       data-map-status
@@ -94,6 +118,38 @@
     >
       Loading current county risk data…
     </div>
+    <aside
+  class="county-risk-card"
+  data-county-risk-card
+  aria-live="polite"
+  hidden
+>
+  <div class="county-risk-card-header">
+    <div>
+      <p class="eyebrow">Selected county</p>
+      <h3 data-county-name>County</h3>
+    </div>
+
+    <span
+      class="county-risk-badge"
+      data-county-risk-badge
+    >
+      No data
+    </span>
+  </div>
+
+  <dl class="county-risk-details">
+    <div>
+      <dt>Observation date</dt>
+      <dd data-county-observation-date>Not available</dd>
+    </div>
+
+    <div>
+      <dt>Current flood risk</dt>
+      <dd data-county-risk-level>No current prediction</dd>
+    </div>
+  </dl>
+</aside>
   </div>
 
   <div class="map-footer">

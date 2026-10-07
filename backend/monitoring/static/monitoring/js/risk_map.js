@@ -120,6 +120,14 @@ function setMapStatus(element, message, state) {
   element.hidden = false;
 }
 
+function normaliseCountyName(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\bcounty\b/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
 
 function initialiseRiskMap() {
   const mapElement = document.querySelector(
@@ -128,9 +136,40 @@ function initialiseRiskMap() {
   const statusElement = document.querySelector(
     "[data-map-status]"
   );
+  const countySelector = document.querySelector(
+  "[data-county-selector]"
+  );
+  const resetButton = document.querySelector(
+    "[data-county-reset]"
+  );
+  const riskCard = document.querySelector(
+    "[data-county-risk-card]"
+  );
+  const countyNameElement = document.querySelector(
+    "[data-county-name]"
+  );
+  const riskBadgeElement = document.querySelector(
+    "[data-county-risk-badge]"
+  );
+  const observationDateElement = document.querySelector(
+    "[data-county-observation-date]"
+  );
+  const riskLevelElement = document.querySelector(
+    "[data-county-risk-level]"
+  );
 
-  if (!mapElement || !statusElement) {
-    return;
+  if (
+  !mapElement ||
+  !statusElement ||
+  !countySelector ||
+  !resetButton ||
+  !riskCard ||
+  !countyNameElement ||
+  !riskBadgeElement ||
+  !observationDateElement ||
+  !riskLevelElement
+  ) {
+      return;
   }
 
   if (typeof L === "undefined") {
@@ -143,7 +182,7 @@ function initialiseRiskMap() {
   }
 
   const map = L.map(mapElement, {
-    zoomControl: true,
+    zoomControl: false,
     minZoom: 5,
     maxZoom: 12,
     maxBounds: KENYA_BOUNDS,
@@ -151,6 +190,10 @@ function initialiseRiskMap() {
   });
 
   map.fitBounds(KENYA_BOUNDS);
+
+  L.control.zoom({
+    position: "bottomleft",
+  }).addTo(map);
 
   map.attributionControl.addAttribution(
   '<a href="https://www.geoboundaries.org/">' +
@@ -163,7 +206,18 @@ function initialiseRiskMap() {
   loadBoundaryData(mapElement.dataset.boundaryUrl),
 ])
   .then(([payload, boundaryData]) => {
-    const boundaryStyle = {
+    const counties = Array.isArray(payload.results)
+  ? payload.results
+  : [];
+
+const predictionsByCounty = new Map(
+  counties.map((county) => [
+    normaliseCountyName(county.county_name),
+    county,
+  ])
+);
+
+const boundaryStyle = {
   color: "#63859a",
   weight: 1.25,
   opacity: 0.9,
@@ -171,51 +225,232 @@ function initialiseRiskMap() {
   fillOpacity: 0.72,
 };
 
+const selectedBoundaryStyle = {
+  color: "#0f4c5c",
+  weight: 3,
+  opacity: 1,
+  fillColor: "#b8d9d5",
+  fillOpacity: 0.92,
+};
+
+const boundaryLayersByCounty = new Map();
+let selectedCountyKey = "";
+
+const boundaryFeatures = Array.isArray(boundaryData.features)
+  ? [...boundaryData.features]
+  : [];
+
+boundaryFeatures.sort((first, second) => {
+  const firstName = first.properties?.shapeName || "";
+  const secondName = second.properties?.shapeName || "";
+
+  return firstName.localeCompare(secondName);
+});
+
+countySelector.replaceChildren();
+
+const allCountiesOption = document.createElement("option");
+allCountiesOption.value = "";
+allCountiesOption.textContent = "All counties";
+countySelector.appendChild(allCountiesOption);
+
+boundaryFeatures.forEach((feature) => {
+  const countyName = feature.properties?.shapeName;
+
+  if (!countyName) {
+    return;
+  }
+
+  const option = document.createElement("option");
+  option.value = normaliseCountyName(countyName);
+  option.textContent = countyName;
+  countySelector.appendChild(option);
+});
+
+const showCountyRisk = (countyName, countyKey) => {
+  const county = predictionsByCounty.get(countyKey);
+
+  countyNameElement.textContent = `${countyName} County`;
+  riskCard.hidden = false;
+
+  if (
+    !county ||
+    county.data_status !== "AVAILABLE" ||
+    !county.risk_level
+  ) {
+    riskBadgeElement.textContent = "No data";
+    riskBadgeElement.dataset.risk = "";
+    observationDateElement.textContent = "Not available";
+    riskLevelElement.textContent = "No current prediction";
+    return;
+  }
+
+  riskBadgeElement.textContent = county.risk_level;
+  riskBadgeElement.dataset.risk = county.risk_level;
+  observationDateElement.textContent =
+    county.observation_date || "Not available";
+  riskLevelElement.textContent = county.risk_level;
+};
+
+const restoreMapStatus = () => {
+  if (!counties.length) {
+    setMapStatus(
+      statusElement,
+      "No county prediction data is currently available.",
+      "empty"
+    );
+    return;
+  }
+
+  statusElement.hidden = true;
+};
+
+const selectCounty = (countyKey) => {
+  boundaryLayersByCounty.forEach((entry, key) => {
+    entry.layer.setStyle(
+      key === countyKey
+        ? selectedBoundaryStyle
+        : boundaryStyle
+    );
+  });
+
+  const selectedEntry =
+    boundaryLayersByCounty.get(countyKey);
+
+  if (!selectedEntry) {
+    return;
+  }
+
+  selectedCountyKey = countyKey;
+  countySelector.value = countyKey;
+  resetButton.disabled = false;
+
+  map.fitBounds(selectedEntry.layer.getBounds(), {
+  padding: [35, 35],
+  });
+
+  if (map.getZoom() > 9) {
+    map.setZoom(9);
+  }
+
+  showCountyRisk(
+    selectedEntry.countyName,
+    countyKey
+  );
+
+  setMapStatus(
+    statusElement,
+    `${selectedEntry.countyName} County selected`,
+    "selected"
+  );
+};
+
 const boundaryLayer = L.geoJSON(
-  boundaryData,
-{
+  boundaryFeatures,
+  {
     style: boundaryStyle,
 
     onEachFeature(feature, layer) {
-        const countyName = feature.properties?.shapeName;
+      const countyName =
+        feature.properties?.shapeName;
 
-        if (!countyName) {
-            return;
+      if (!countyName) {
+        return;
+      }
+
+      const countyKey =
+        normaliseCountyName(countyName);
+
+      boundaryLayersByCounty.set(countyKey, {
+        countyName,
+        layer,
+      });
+
+      layer.on("mouseover", function () {
+        this.setStyle({
+          color: "#184e5a",
+          weight: 2.5,
+          fillOpacity: 0.9,
+        });
+
+        this.bringToFront();
+        statusElement.textContent =
+          `${countyName} County`;
+        statusElement.hidden = false;
+      });
+
+      layer.on("mouseout", function () {
+        this.setStyle(
+          countyKey === selectedCountyKey
+            ? selectedBoundaryStyle
+            : boundaryStyle
+        );
+
+        if (selectedCountyKey) {
+          const selectedEntry =
+            boundaryLayersByCounty.get(
+              selectedCountyKey
+            );
+
+          statusElement.textContent =
+            `${selectedEntry.countyName} County selected`;
+          statusElement.hidden = false;
+        } else {
+          restoreMapStatus();
         }
+      });
 
-        layer.on("mouseover", function () {
-            this.setStyle({
-            color: "#184e5a",
-            weight: 2.5,
-            fillOpacity: 0.9,
-            });
-
-            this.bringToFront();
-
-            statusElement.textContent = `${countyName} County`;
-            statusElement.hidden = false;
-        });
-
-        layer.on("mouseout", function () {
-            this.setStyle(boundaryStyle);
-
-            statusElement.textContent =
-            "No county prediction data is currently available.";
-            statusElement.hidden = false;
-        });
+      layer.on("click", function () {
+        selectCounty(countyKey);
+      });
     },
-}
+  }
 ).addTo(map);
-    const boundaryBounds = boundaryLayer.getBounds();
+
+const boundaryBounds = boundaryLayer.getBounds();
+
+if (boundaryBounds.isValid()) {
+  map.fitBounds(boundaryBounds, {
+    padding: [18, 18],
+  });
+}
+
+countySelector.disabled = false;
+resetButton.disabled = true;
+
+countySelector.addEventListener("change", () => {
+  const countyKey = countySelector.value;
+
+  if (!countyKey) {
+    selectedCountyKey = "";
+
+    boundaryLayersByCounty.forEach(
+      ({ layer }) => {
+        layer.setStyle(boundaryStyle);
+      }
+    );
 
     if (boundaryBounds.isValid()) {
       map.fitBounds(boundaryBounds, {
         padding: [18, 18],
       });
     }
-      const counties = Array.isArray(payload.results)
-        ? payload.results
-        : [];
+
+    riskCard.hidden = true;
+    resetButton.disabled = true;
+    restoreMapStatus();
+    return;
+  }
+
+  selectCounty(countyKey);
+});
+
+resetButton.addEventListener("click", () => {
+  countySelector.value = "";
+  countySelector.dispatchEvent(
+    new Event("change")
+  );
+});
 
       if (!counties.length) {
         setMapStatus(
