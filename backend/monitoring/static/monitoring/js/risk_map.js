@@ -225,13 +225,31 @@ const boundaryStyle = {
   fillOpacity: 0.72,
 };
 
-const selectedBoundaryStyle = {
-  color: "#0f4c5c",
-  weight: 3,
-  opacity: 1,
-  fillColor: "#b8d9d5",
-  fillOpacity: 0.92,
-};
+
+function getBoundaryStyle(countyKey, selected = false) {
+  const county = predictionsByCounty.get(countyKey);
+
+  const riskStyle =
+    county?.data_status === "AVAILABLE"
+      ? RISK_STYLE[county.risk_level]
+      : null;
+
+  return {
+    ...boundaryStyle,
+    fillColor: riskStyle
+      ? riskStyle.colour
+      : NO_DATA_STYLE.colour,
+    fillOpacity: riskStyle ? 0.78 : 0.32,
+    ...(selected
+      ? {
+          color: "#0f4c5c",
+          weight: 3,
+          opacity: 1,
+          fillOpacity: riskStyle ? 0.92 : 0.55,
+        }
+      : {}),
+  };
+}
 
 const boundaryLayersByCounty = new Map();
 let selectedCountyKey = "";
@@ -308,9 +326,10 @@ const restoreMapStatus = () => {
 const selectCounty = (countyKey) => {
   boundaryLayersByCounty.forEach((entry, key) => {
     entry.layer.setStyle(
-      key === countyKey
-        ? selectedBoundaryStyle
-        : boundaryStyle
+      getBoundaryStyle(
+        key,
+        key === countyKey
+      )
     );
   });
 
@@ -348,7 +367,14 @@ const selectCounty = (countyKey) => {
 const boundaryLayer = L.geoJSON(
   boundaryFeatures,
   {
-    style: boundaryStyle,
+    style(feature) {
+      const countyName =
+        feature.properties?.shapeName || "";
+
+      return getBoundaryStyle(
+        normaliseCountyName(countyName)
+      );
+    },
 
     onEachFeature(feature, layer) {
       const countyName =
@@ -381,9 +407,10 @@ const boundaryLayer = L.geoJSON(
 
       layer.on("mouseout", function () {
         this.setStyle(
-          countyKey === selectedCountyKey
-            ? selectedBoundaryStyle
-            : boundaryStyle
+          getBoundaryStyle(
+            countyKey,
+            countyKey === selectedCountyKey
+          )
         );
 
         if (selectedCountyKey) {
@@ -425,8 +452,10 @@ countySelector.addEventListener("change", () => {
     selectedCountyKey = "";
 
     boundaryLayersByCounty.forEach(
-      ({ layer }) => {
-        layer.setStyle(boundaryStyle);
+      ({ layer }, countyKey) => {
+        layer.setStyle(
+          getBoundaryStyle(countyKey)
+        );
       }
     );
 
