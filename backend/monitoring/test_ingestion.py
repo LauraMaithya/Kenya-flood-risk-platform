@@ -314,3 +314,35 @@ class ObservationIngestionTests(TestCase):
                 "--batch-size",
                 "0",
             )
+    def test_summary_returns_imported_observation_ids(self):
+        second_row = self.valid_row.copy()
+        second_row["observation_date"] = "2026-01-16"
+        second_row["source_record_id"] = (
+            "test-047-2026-01-16"
+        )
+
+        csv_path = self.write_csv(
+            [
+                self.valid_row,
+                second_row,
+            ]
+        )
+
+        summary = ingest_observations(
+            csv_path,
+            batch_size=2,
+        )
+
+        expected_ids = tuple(
+            EnvironmentalObservation.objects.order_by(
+                "observation_date"
+            ).values_list(
+                "pk",
+                flat=True,
+            )
+        )
+
+        self.assertEqual(
+            summary.observation_ids,
+            expected_ids,
+        )

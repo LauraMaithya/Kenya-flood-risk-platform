@@ -54,6 +54,7 @@ class IngestionSummary:
     updated: int
     counties_created: int
     dry_run: bool
+    observation_ids: tuple[int, ...]
 
 
 def _required_value(row, column, row_number):
@@ -483,4 +484,9 @@ def ingest_observations(
         updated=len(changed_observations),
         counties_created=counties_created,
         dry_run=dry_run,
+        observation_ids=tuple(
+            observation.pk
+            for observation, _row_number
+            in validation_rows
+        ),
     )
