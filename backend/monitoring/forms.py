@@ -1,3 +1,4 @@
+import calendar
 from django import forms
 
 from monitoring.models import (
@@ -19,6 +20,76 @@ class CountyRiskFilterForm(forms.Form):
         self.fields["county"].queryset = (
             County.objects.order_by("name")
         )
+class DashboardPeriodForm(forms.Form):
+    year = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "Latest available"),
+        ],
+    )
+    month = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "All months"),
+            *[
+                (str(month), calendar.month_name[month])
+                for month in range(1, 13)
+            ],
+        ],
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        available_years = (
+            FloodPrediction.objects.filter(
+                observation__is_synthetic=False
+            )
+            .order_by()
+            .values_list(
+                "observation__observation_date__year",
+                flat=True,
+            )
+            .distinct()
+        )
+
+        self.fields["year"].choices = [
+            ("", "Latest available"),
+            *[
+                (str(year), str(year))
+                for year in sorted(
+                    available_years,
+                    reverse=True,
+                )
+                if year is not None
+            ],
+        ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        year = cleaned_data.get("year")
+        month = cleaned_data.get("month")
+
+        cleaned_data["year"] = (
+            int(year)
+            if year
+            else None
+        )
+        cleaned_data["month"] = (
+            int(month)
+            if month
+            else None
+        )
+
+        if month and not year:
+            self.add_error(
+                "month",
+                "Select a year before selecting a month.",
+            )
+
+        return cleaned_data
+
+
 class HistoricalDataFilterForm(forms.Form):
     county = forms.ModelChoiceField(
         queryset=County.objects.none(),

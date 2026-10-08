@@ -6,7 +6,8 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import TemplateView
-
+import calendar
+from urllib.parse import urlencode
 from monitoring.models import County, FloodPrediction
 from django.core.paginator import Paginator
 from django.http import HttpResponse
@@ -14,6 +15,7 @@ from monitoring.forms import (
     AlertFilterForm,
     CountyRiskFilterForm,
     HistoricalDataFilterForm,
+    DashboardPeriodForm,
 )
 from monitoring.services.historical_data import (
     historical_coverage_summary,
@@ -69,12 +71,24 @@ class RegisterPageView(PublicOnlyView):
     template_name = "monitoring/register.html"
 
 
-def latest_prediction_summary():
-    latest_prediction = (
-        FloodPrediction.objects.filter(
-            observation__county_id=OuterRef("pk")
+def latest_prediction_summary(year=None, month=None):
+    latest_prediction = FloodPrediction.objects.filter(
+        observation__county_id=OuterRef("pk"),
+        observation__is_synthetic=False,
+    )
+
+    if year is not None:
+        latest_prediction = latest_prediction.filter(
+            observation__observation_date__year=year
         )
-        .order_by(
+
+    if month is not None:
+        latest_prediction = latest_prediction.filter(
+            observation__observation_date__month=month
+        )
+
+    latest_prediction = (
+        latest_prediction.order_by(
             "-observation__observation_date",
             "-predicted_at",
             "-pk",
@@ -95,15 +109,21 @@ def latest_prediction_summary():
     ).aggregate(
         high_risk_count=Count(
             "pk",
-            filter=Q(risk_level=FloodPrediction.RiskLevel.HIGH),
+            filter=Q(
+                risk_level=FloodPrediction.RiskLevel.HIGH
+            ),
         ),
         medium_risk_count=Count(
             "pk",
-            filter=Q(risk_level=FloodPrediction.RiskLevel.MEDIUM),
+            filter=Q(
+                risk_level=FloodPrediction.RiskLevel.MEDIUM
+            ),
         ),
         low_risk_count=Count(
             "pk",
-            filter=Q(risk_level=FloodPrediction.RiskLevel.LOW),
+            filter=Q(
+                risk_level=FloodPrediction.RiskLevel.LOW
+            ),
         ),
         monitored_count=Count("pk"),
         latest_data_date=Max(
@@ -122,9 +142,63 @@ class DashboardView(ProtectedPageView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(latest_prediction_summary())
-        return context
 
+        form_data = (
+            self.request.GET
+            if (
+                "year" in self.request.GET
+                or "month" in self.request.GET
+            )
+            else None
+        )
+        period_form = DashboardPeriodForm(form_data)
+
+        selected_year = None
+        selected_month = None
+
+        if period_form.is_valid():
+            selected_year = period_form.cleaned_data.get("year")
+            selected_month = period_form.cleaned_data.get(
+                "month"
+            )
+        if selected_year is None:
+            selected_period_label = "Latest available"
+        elif selected_month is None:
+            selected_period_label = str(selected_year)
+        else:
+            selected_period_label = (
+                f"{calendar.month_name[selected_month]} "
+                f"{selected_year}"
+            )
+
+        context.update(
+            latest_prediction_summary(
+                year=selected_year,
+                month=selected_month,
+            )
+        )
+
+        query_parameters = {}
+
+        if selected_year is not None:
+            query_parameters["year"] = selected_year
+
+        if selected_month is not None:
+            query_parameters["month"] = selected_month
+
+        context.update(
+            {
+                "period_form": period_form,
+                "selected_year": selected_year,
+                "selected_month": selected_month,
+                "selected_period_label": selected_period_label,
+                "dashboard_map_query": urlencode(
+                    query_parameters
+                ),
+            }
+        )
+
+        return context
 
 class CountyRiskView(ProtectedPageView):
     template_name = "monitoring/county_risk.html"

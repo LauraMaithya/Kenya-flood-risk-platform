@@ -264,6 +264,209 @@ class DashboardMapAPITests(APITestCase):
             },
             {"Mombasa", "Nairobi"},
         )
+    def test_year_and_month_select_latest_period_prediction(self):
+        nairobi = self.create_county(
+            code="047",
+            name="Nairobi",
+        )
+        mombasa = self.create_county(
+            code="001",
+            name="Mombasa",
+        )
+
+        self.create_prediction(
+            county=nairobi,
+            observation_date=date(2025, 3, 31),
+            risk_level=FloodPrediction.RiskLevel.HIGH,
+            model_release_id="march-release",
+        )
+        self.create_prediction(
+            county=nairobi,
+            observation_date=date(2025, 4, 10),
+            risk_level=FloodPrediction.RiskLevel.MEDIUM,
+            model_release_id="april-old-release",
+        )
+        self.create_prediction(
+            county=nairobi,
+            observation_date=date(2025, 4, 30),
+            risk_level=FloodPrediction.RiskLevel.LOW,
+            model_release_id="april-latest-release",
+        )
+        self.create_prediction(
+            county=mombasa,
+            observation_date=date(2025, 5, 1),
+            risk_level=FloodPrediction.RiskLevel.HIGH,
+            model_release_id="may-release",
+        )
+
+        self.authenticate()
+
+        response = self.client.get(
+            self.url,
+            {
+                "year": 2025,
+                "month": 4,
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+        self.assertEqual(
+            response.data["period"],
+            {
+                "year": 2025,
+                "month": 4,
+                "label": "April 2025",
+                "latest_data_date": "2025-04-30",
+            },
+        )
+        self.assertEqual(
+            response.data["summary"],
+            {
+                "high_risk_count": 0,
+                "medium_risk_count": 0,
+                "low_risk_count": 1,
+                "monitored_count": 1,
+            },
+        )
+
+        results_by_county = {
+            item["county_name"]: item
+            for item in response.data["results"]
+        }
+
+        self.assertEqual(
+            results_by_county["Nairobi"]["risk_level"],
+            FloodPrediction.RiskLevel.LOW,
+        )
+        self.assertEqual(
+            results_by_county["Nairobi"]["observation_date"],
+            "2025-04-30",
+        )
+        self.assertEqual(
+            results_by_county["Mombasa"]["data_status"],
+            "NO_DATA",
+        )
+
+    def test_year_selection_uses_latest_prediction_in_year(self):
+        county = self.create_county(
+            code="022",
+            name="Kiambu",
+        )
+
+        self.create_prediction(
+            county=county,
+            observation_date=date(2024, 12, 31),
+            risk_level=FloodPrediction.RiskLevel.HIGH,
+            model_release_id="2024-release",
+        )
+        self.create_prediction(
+            county=county,
+            observation_date=date(2025, 6, 1),
+            risk_level=FloodPrediction.RiskLevel.MEDIUM,
+            model_release_id="2025-old-release",
+        )
+        self.create_prediction(
+            county=county,
+            observation_date=date(2025, 12, 31),
+            risk_level=FloodPrediction.RiskLevel.LOW,
+            model_release_id="2025-latest-release",
+        )
+
+        self.authenticate()
+
+        response = self.client.get(
+            self.url,
+            {"year": 2025},
+        )
+
+        county_result = response.data["results"][0]
+
+        self.assertEqual(
+            response.data["period"]["label"],
+            "2025",
+        )
+        self.assertEqual(
+            response.data["period"]["latest_data_date"],
+            "2025-12-31",
+        )
+        self.assertEqual(
+            county_result["risk_level"],
+            FloodPrediction.RiskLevel.LOW,
+        )
+        self.assertEqual(
+            county_result["observation_date"],
+            "2025-12-31",
+        )
+
+    def test_period_response_lists_available_prediction_years(self):
+        county = self.create_county(
+            code="030",
+            name="Baringo",
+        )
+
+        self.create_prediction(
+            county=county,
+            observation_date=date(2023, 1, 1),
+            risk_level=FloodPrediction.RiskLevel.LOW,
+            model_release_id="2023-release",
+        )
+        self.create_prediction(
+            county=county,
+            observation_date=date(2025, 1, 1),
+            risk_level=FloodPrediction.RiskLevel.MEDIUM,
+            model_release_id="2025-release",
+        )
+
+        self.authenticate()
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(
+            response.data["available_years"],
+            [2025, 2023],
+        )
+        self.assertEqual(
+            response.data["period"]["label"],
+            "Latest available",
+        )
+
+    def test_month_requires_year(self):
+        self.authenticate()
+
+        response = self.client.get(
+            self.url,
+            {"month": 4},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+        self.assertIn("month", response.data)
+
+    def test_invalid_period_parameters_are_rejected(self):
+        self.authenticate()
+
+        invalid_parameters = [
+            {"year": "not-a-year"},
+            {"year": 2025, "month": 0},
+            {"year": 2025, "month": 13},
+        ]
+
+        for parameters in invalid_parameters:
+            with self.subTest(parameters=parameters):
+                response = self.client.get(
+                    self.url,
+                    parameters,
+                )
+
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_400_BAD_REQUEST,
+                )
     def test_dashboard_contains_heatmap_contract(self):
         self.client.force_login(self.user)
 
@@ -309,9 +512,99 @@ class DashboardMapAPITests(APITestCase):
         )
         self.assertContains(
             response,
-            "Select a county to zoom in and view its current risk.",
+           "Select a county to zoom in and view its risk for this period.",
         )
         self.assertContains(
             response,
             "data-county-risk-card",
+        )
+
+    def test_dashboard_contains_period_control_contract(self):
+        county = self.create_county(
+            code="047",
+            name="Nairobi",
+        )
+        self.create_prediction(
+            county=county,
+            observation_date=date(2025, 4, 30),
+            risk_level=FloodPrediction.RiskLevel.HIGH,
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("monitoring-web:dashboard"),
+            {
+                "year": 2025,
+                "month": 4,
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+        self.assertContains(
+            response,
+            "Dashboard prediction period",
+        )
+        self.assertContains(
+            response,
+            'name="year"',
+        )
+        self.assertContains(
+            response,
+            'name="month"',
+        )
+        self.assertContains(
+            response,
+            "April 2025",
+        )
+        self.assertContains(
+            response,
+            "30 April 2025",
+        )
+        self.assertContains(
+            response,
+            "year=2025&amp;month=4",
+        )
+        self.assertContains(
+            response,
+            "latest flood-risk classification "
+            "within the selected period",
+        )
+
+    def test_dashboard_accepts_year_with_all_months(self):
+        county = self.create_county(
+            code="047",
+            name="Nairobi",
+        )
+        self.create_prediction(
+            county=county,
+            observation_date=date(2021, 12, 31),
+            risk_level=FloodPrediction.RiskLevel.HIGH,
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("monitoring-web:dashboard"),
+            {
+                "year": "2021",
+                "month": "",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+        self.assertContains(response, "2021")
+        self.assertContains(
+            response,
+            "31 December 2021",
+        )
+        self.assertContains(
+            response,
+            "year=2021",
         )

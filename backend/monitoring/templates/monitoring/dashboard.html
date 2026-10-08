@@ -20,16 +20,23 @@
     </p>
   </div>
 
-  <p class="data-date">
-    Latest data:
-    <strong>
-      {% if latest_data_date %}
-        {{ latest_data_date|date:"j F Y" }}
-      {% else %}
-        No data available
-      {% endif %}
-    </strong>
-  </p>
+  <div class="dashboard-period-summary">
+    <span>
+      Selected period:
+      <strong>{{ selected_period_label }}</strong>
+    </span>
+
+    <span>
+      Latest data in period:
+      <strong>
+        {% if latest_data_date %}
+          {{ latest_data_date|date:"j F Y" }}
+        {% else %}
+          No data available
+        {% endif %}
+      </strong>
+    </span>
+  </div>
 </section>
 
 <section
@@ -64,16 +71,64 @@
       <h2 id="map-title">Kenya Flood-Risk Heatmap</h2>
       <p>
         Heat intensity and marker colour show each county's
-        latest available flood-risk classification.
+        latest flood-risk classification within the selected period.
       </p>
     </div>
+        <form
+      method="get"
+      action="{% url 'monitoring-web:dashboard' %}"
+      class="dashboard-period-form"
+      aria-label="Dashboard prediction period"
+    >
+      <div class="dashboard-period-field">
+        <label for="{{ period_form.year.id_for_label }}">
+          Year
+        </label>
+        {{ period_form.year }}
+        {% for error in period_form.year.errors %}
+          <small class="field-error">{{ error }}</small>
+        {% endfor %}
+      </div>
+
+      <div class="dashboard-period-field">
+        <label for="{{ period_form.month.id_for_label }}">
+          Month
+        </label>
+        {{ period_form.month }}
+        {% for error in period_form.month.errors %}
+          <small class="field-error">{{ error }}</small>
+        {% endfor %}
+      </div>
+
+      <div class="dashboard-period-actions">
+        <button
+          type="submit"
+          class="button button-primary"
+        >
+          Update map
+        </button>
+
+        {% if selected_year or selected_month %}
+          <a
+            href="{% url 'monitoring-web:dashboard' %}"
+            class="button button-secondary"
+          >
+            Latest
+          </a>
+        {% endif %}
+      </div>
+
+      {% for error in period_form.non_field_errors %}
+        <p class="field-error">{{ error }}</p>
+      {% endfor %}
+    </form>
   </div>
 
   <div class="map-frame">
     <div
       id="kenya-risk-map"
       class="kenya-risk-map"
-      data-map-url="{% url 'monitoring-api:dashboard-map' %}"
+      data-map-url="{% url 'monitoring-api:dashboard-map' %}{% if dashboard_map_query %}?{{ dashboard_map_query }}{% endif %}"
       data-boundary-url="{% static 'monitoring/data/kenya_adm1.geojson' %}"
       role="region"
       aria-label="Interactive Kenya county flood-risk heatmap"
@@ -105,7 +160,7 @@
         </div>
 
         <small id="county-selector-help">
-          Select a county to zoom in and view its current risk.
+          Select a county to zoom in and view its risk for this period.
         </small>
       </div>
     </div>
@@ -145,7 +200,7 @@
     </div>
 
     <div>
-      <dt>Current flood risk</dt>
+      <dt>Flood risk for period</dt>
       <dd data-county-risk-level>No current prediction</dd>
     </div>
   </dl>
@@ -176,7 +231,7 @@
     </ul>
 
     <p class="map-guidance">
-      Select a marker to view the county's latest result.
+      Select a marker to view the county's result for this period.
     </p>
   </div>
 
