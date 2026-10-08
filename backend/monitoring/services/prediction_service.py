@@ -200,47 +200,51 @@ def clear_model_cache():
     get_model_release.cache_clear()
 
 
-def predict_features(features: Mapping):
-    release = get_model_release()
-
+def _validated_feature_values(
+    features: Mapping,
+    feature_names,
+    *,
+    row_number=None,
+):
     missing_features = [
         feature
-        for feature in release.feature_names
+        for feature in feature_names
         if feature not in features
     ]
+
+    row_prefix = (
+        f"Row {row_number}: "
+        if row_number is not None
+        else ""
+    )
 
     if missing_features:
         missing = ", ".join(missing_features)
         raise PredictionServiceError(
-            f"Missing prediction features: {missing}"
+            f"{row_prefix}Missing prediction features: {missing}"
         )
 
     feature_values = []
 
-    for feature_name in release.feature_names:
+    for feature_name in feature_names:
         try:
             value = float(features[feature_name])
         except (TypeError, ValueError) as exc:
             raise PredictionServiceError(
-                f"{feature_name} must be numeric."
+                f"{row_prefix}{feature_name} must be numeric."
             ) from exc
 
         if not math.isfinite(value):
             raise PredictionServiceError(
-                f"{feature_name} must be finite."
+                f"{row_prefix}{feature_name} must be finite."
             )
 
         feature_values.append(value)
 
-    prediction_frame = pd.DataFrame(
-        [feature_values],
-        columns=release.feature_names,
-    )
+    return feature_values
 
-    raw_probabilities = release.model.predict_proba(
-        prediction_frame
-    )[0]
 
+def _prediction_result(release, raw_probabilities):
     probabilities = {
         class_name: float(probability)
         for class_name, probability in zip(
@@ -279,17 +283,78 @@ def predict_features(features: Mapping):
     )
 
 
-def predict_observation(observation):
-    if observation.is_synthetic:
+def predict_feature_rows(feature_rows):
+    release = get_model_release()
+    rows = list(feature_rows)
+
+    if not rows:
+        return tuple()
+
+    validated_rows = [
+        _validated_feature_values(
+            features,
+            release.feature_names,
+            row_number=index,
+        )
+        for index, features in enumerate(
+            rows,
+            start=1,
+        )
+    ]
+
+    prediction_frame = pd.DataFrame(
+        validated_rows,
+        columns=release.feature_names,
+    )
+
+    probability_matrix = release.model.predict_proba(
+        prediction_frame
+    )
+
+    if len(probability_matrix) != len(rows):
         raise PredictionServiceError(
-            "Synthetic observations cannot receive "
-            "production predictions."
+            "The model returned an unexpected number "
+            "of probability rows."
         )
 
-    features = {
-        feature_name: getattr(observation, feature_name)
-        for feature_name in get_model_release().feature_names
-    }
+    return tuple(
+        _prediction_result(
+            release,
+            raw_probabilities,
+        )
+        for raw_probabilities in probability_matrix
+    )
 
-    return predict_features(features)
-    
+
+def predict_features(features: Mapping):
+    return predict_feature_rows([features])[0]
+
+
+def predict_observations(observations):
+    observation_rows = list(observations)
+
+    for observation in observation_rows:
+        if observation.is_synthetic:
+            raise PredictionServiceError(
+                "Synthetic observations cannot receive "
+                "production predictions."
+            )
+
+    release = get_model_release()
+
+    feature_rows = [
+        {
+            feature_name: getattr(
+                observation,
+                feature_name,
+            )
+            for feature_name in release.feature_names
+        }
+        for observation in observation_rows
+    ]
+
+    return predict_feature_rows(feature_rows)
+
+
+def predict_observation(observation):
+    return predict_observations([observation])[0]
