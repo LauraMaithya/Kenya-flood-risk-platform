@@ -1,9 +1,13 @@
 import csv
 import tempfile
+from decimal import Decimal
 from io import StringIO
 from pathlib import Path
 
-from django.core.management import call_command
+from django.core.management import (
+    call_command,
+    CommandError,
+)
 from django.test import TestCase
 
 from monitoring.models import County, EnvironmentalObservation
@@ -164,3 +168,149 @@ class ObservationIngestionTests(TestCase):
             EnvironmentalObservation.objects.count(),
             1,
         )
+
+    def test_multiple_rows_are_bulk_created(self):
+        second_row = self.valid_row.copy()
+        second_row["observation_date"] = "2026-01-16"
+        second_row["source_record_id"] = (
+            "test-047-2026-01-16"
+        )
+
+        third_row = self.valid_row.copy()
+        third_row["observation_date"] = "2026-01-17"
+        third_row["source_record_id"] = (
+            "test-047-2026-01-17"
+        )
+
+        csv_path = self.write_csv(
+            [
+                self.valid_row,
+                second_row,
+                third_row,
+            ]
+        )
+
+        summary = ingest_observations(
+            csv_path,
+            batch_size=2,
+        )
+
+        self.assertEqual(summary.processed, 3)
+        self.assertEqual(summary.created, 3)
+        self.assertEqual(summary.updated, 0)
+        self.assertEqual(summary.counties_created, 1)
+        self.assertEqual(
+            County.objects.count(),
+            1,
+        )
+        self.assertEqual(
+            EnvironmentalObservation.objects.count(),
+            3,
+        )
+
+    def test_multiple_existing_rows_are_bulk_updated(self):
+        second_row = self.valid_row.copy()
+        second_row["observation_date"] = "2026-01-16"
+        second_row["source_record_id"] = (
+            "test-047-2026-01-16"
+        )
+
+        original_csv_path = self.write_csv(
+            [
+                self.valid_row,
+                second_row,
+            ]
+        )
+        ingest_observations(
+            original_csv_path,
+            batch_size=1,
+        )
+
+        first_update = self.valid_row.copy()
+        first_update["precipitation_max_mm"] = "60.25"
+
+        second_update = second_row.copy()
+        second_update["precipitation_max_mm"] = "70.50"
+
+        updated_csv_path = self.write_csv(
+            [
+                first_update,
+                second_update,
+            ]
+        )
+
+        summary = ingest_observations(
+            updated_csv_path,
+            batch_size=1,
+        )
+
+        self.assertEqual(summary.processed, 2)
+        self.assertEqual(summary.created, 0)
+        self.assertEqual(summary.updated, 2)
+        self.assertEqual(
+            EnvironmentalObservation.objects.count(),
+            2,
+        )
+
+        precipitation_values = list(
+            EnvironmentalObservation.objects.order_by(
+                "observation_date"
+            ).values_list(
+                "precipitation_max_mm",
+                flat=True,
+            )
+        )
+
+        self.assertEqual(
+            precipitation_values,
+            [
+                Decimal("60.250"),
+                Decimal("70.500"),
+            ],
+        )
+
+    def test_duplicate_csv_key_rolls_back_all_rows(self):
+        duplicate_row = self.valid_row.copy()
+        duplicate_row["source_record_id"] = (
+            "duplicate-source-record"
+        )
+
+        csv_path = self.write_csv(
+            [
+                self.valid_row,
+                duplicate_row,
+            ]
+        )
+
+        with self.assertRaisesRegex(
+            ObservationIngestionError,
+            "duplicate county and date",
+        ):
+            ingest_observations(
+                csv_path,
+                batch_size=2,
+            )
+
+        self.assertEqual(
+            County.objects.count(),
+            0,
+        )
+        self.assertEqual(
+            EnvironmentalObservation.objects.count(),
+            0,
+        )
+
+    def test_command_rejects_invalid_batch_size(self):
+        csv_path = self.write_csv([self.valid_row])
+
+        with self.assertRaisesRegex(
+            CommandError,
+            "--batch-size must be greater than zero",
+        ):
+            call_command(
+                "import_observations",
+                "--file",
+                str(csv_path),
+                "--batch-size",
+                "0",
+            )
