@@ -599,7 +599,33 @@ async function loadBoundaryData(url) {
   return response.json();
 }
 
-document.addEventListener(
-  "DOMContentLoaded",
-  initialiseRiskMap
-);
+function initialiseDashboardPeriodControls() {
+  const yearSelector = document.querySelector("#id_year");
+  const monthSelector = document.querySelector("#id_month");
+
+  if (!yearSelector || !monthSelector) {
+    return;
+  }
+
+  const synchroniseMonthSelector = () => {
+    const hasSelectedYear = Boolean(yearSelector.value);
+
+    monthSelector.disabled = !hasSelectedYear;
+
+    if (!hasSelectedYear) {
+      monthSelector.value = "";
+    }
+  };
+
+  synchroniseMonthSelector();
+
+  yearSelector.addEventListener(
+    "change",
+    synchroniseMonthSelector
+  );
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initialiseDashboardPeriodControls();
+  initialiseRiskMap();
+});

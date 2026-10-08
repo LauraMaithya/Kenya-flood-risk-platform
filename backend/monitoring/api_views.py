@@ -1,5 +1,8 @@
+import calendar
 from datetime import date
+
 from django.db.models import OuterRef, Subquery
+from django.db.models.functions import ExtractYear
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
@@ -36,6 +39,41 @@ def _parse_date_parameter(request, parameter):
             {parameter: "Use the YYYY-MM-DD date format."}
         ) from exc
 
+def _parse_integer_parameter(
+    request,
+    parameter,
+    *,
+    minimum,
+    maximum,
+):
+    value = request.query_params.get(parameter)
+
+    if value in {None, ""}:
+        return None
+
+    try:
+        parsed_value = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValidationError(
+            {
+                parameter: (
+                    f"Use a whole number from "
+                    f"{minimum} to {maximum}."
+                )
+            }
+        ) from exc
+
+    if not minimum <= parsed_value <= maximum:
+        raise ValidationError(
+            {
+                parameter: (
+                    f"Use a whole number from "
+                    f"{minimum} to {maximum}."
+                )
+            }
+        )
+
+    return parsed_value
 
 class HealthAPIView(APIView):
     permission_classes = [AllowAny]
@@ -52,12 +90,62 @@ class DashboardMapAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        latest_prediction = (
-            FloodPrediction.objects.filter(
-                observation__county_id=OuterRef("pk"),
-                observation__is_synthetic=False,
+        year = _parse_integer_parameter(
+            request,
+            "year",
+            minimum=2000,
+            maximum=2100,
+        )
+        month = _parse_integer_parameter(
+            request,
+            "month",
+            minimum=1,
+            maximum=12,
+        )
+
+        if month is not None and year is None:
+            raise ValidationError(
+                {
+                    "month": (
+                        "Select a year before selecting a month."
+                    )
+                }
             )
-            .order_by(
+
+        real_predictions = FloodPrediction.objects.filter(
+            observation__is_synthetic=False
+        )
+
+        available_years = list(
+            real_predictions.annotate(
+                observation_year=ExtractYear(
+                    "observation__observation_date"
+                )
+            )
+            .order_by("-observation_year")
+            .values_list(
+                "observation_year",
+                flat=True,
+            )
+            .distinct()
+        )
+
+        latest_prediction = real_predictions.filter(
+            observation__county_id=OuterRef("pk")
+        )
+
+        if year is not None:
+            latest_prediction = latest_prediction.filter(
+                observation__observation_date__year=year
+            )
+
+        if month is not None:
+            latest_prediction = latest_prediction.filter(
+                observation__observation_date__month=month
+            )
+
+        latest_prediction = (
+            latest_prediction.order_by(
                 "-observation__observation_date",
                 "-predicted_at",
                 "-pk",
@@ -92,6 +180,13 @@ class DashboardMapAPIView(APIView):
         }
 
         results = []
+        summary = {
+            "high_risk_count": 0,
+            "medium_risk_count": 0,
+            "low_risk_count": 0,
+            "monitored_count": 0,
+        }
+        latest_data_date = None
 
         for county in counties:
             prediction = predictions_by_id.get(
@@ -128,13 +223,16 @@ class DashboardMapAPIView(APIView):
             }
 
             if prediction is not None:
+                observation_date = (
+                    prediction.observation.observation_date
+                )
+
                 item.update(
                     {
                         "data_status": "AVAILABLE",
                         "risk_level": prediction.risk_level,
                         "observation_date": (
-                            prediction.observation
-                            .observation_date.isoformat()
+                            observation_date.isoformat()
                         ),
                         "probability_high": float(
                             prediction.probability_high
@@ -145,15 +243,57 @@ class DashboardMapAPIView(APIView):
                     }
                 )
 
+                summary["monitored_count"] += 1
+
+                risk_key = {
+                    FloodPrediction.RiskLevel.HIGH: (
+                        "high_risk_count"
+                    ),
+                    FloodPrediction.RiskLevel.MEDIUM: (
+                        "medium_risk_count"
+                    ),
+                    FloodPrediction.RiskLevel.LOW: (
+                        "low_risk_count"
+                    ),
+                }[prediction.risk_level]
+
+                summary[risk_key] += 1
+
+                if (
+                    latest_data_date is None
+                    or observation_date > latest_data_date
+                ):
+                    latest_data_date = observation_date
+
             results.append(item)
+
+        if year is None:
+            period_label = "Latest available"
+        elif month is None:
+            period_label = str(year)
+        else:
+            period_label = (
+                f"{calendar.month_name[month]} {year}"
+            )
 
         return Response(
             {
                 "count": len(results),
+                "available_years": available_years,
+                "period": {
+                    "year": year,
+                    "month": month,
+                    "label": period_label,
+                    "latest_data_date": (
+                        latest_data_date.isoformat()
+                        if latest_data_date is not None
+                        else None
+                    ),
+                },
+                "summary": summary,
                 "results": results,
             }
         )
-
 
 class CountyListAPIView(ListAPIView):
     serializer_class = CountySerializer
