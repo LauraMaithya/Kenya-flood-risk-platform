@@ -1034,6 +1034,7 @@ select:focus-visible {
   }
 }
 .historical-filter-card,
+.historical-coverage-card,
 .historical-results-card {
   padding: 1.25rem;
   border: 1px solid var(--border);
@@ -1042,6 +1043,7 @@ select:focus-visible {
   box-shadow: var(--shadow);
 }
 
+.historical-coverage-card,
 .historical-results-card {
   margin-top: 1.25rem;
 }
@@ -1074,8 +1076,8 @@ select:focus-visible {
 .historical-filter-form {
   display: grid;
   grid-template-columns:
-    minmax(180px, 1.3fr)
-    repeat(3, minmax(150px, 1fr))
+    minmax(170px, 1.25fr)
+    repeat(4, minmax(135px, 1fr))
     auto;
   align-items: end;
   gap: 0.85rem;
@@ -1110,6 +1112,70 @@ select:focus-visible {
   color: #b91c1c;
   font-size: 0.75rem;
   list-style: none;
+}
+
+.historical-coverage-period {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.historical-coverage-note {
+  margin: -0.25rem 0 1rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.historical-coverage-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.historical-summary-item {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 108px;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.historical-summary-item span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.historical-summary-item strong {
+  color: var(--navy);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.historical-summary-item small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.historical-summary-item.risk-high {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.historical-summary-item.risk-medium {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.historical-summary-item.risk-low {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
 }
 
 .historical-result-count {
@@ -1236,6 +1302,11 @@ select:focus-visible {
   .historical-filter-form .button {
     width: 100%;
   }
+
+  .historical-coverage-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 650px) {
@@ -1245,6 +1316,10 @@ select:focus-visible {
 
   .section-heading {
     flex-direction: column;
+  }
+
+  .historical-coverage-grid {
+    grid-template-columns: 1fr;
   }
 }
 

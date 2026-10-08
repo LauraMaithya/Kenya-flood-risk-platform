@@ -26,6 +26,12 @@ class HistoricalDataFilterForm(forms.Form):
         empty_label="All counties",
         to_field_name="slug",
     )
+    year = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "All years"),
+        ],
+    )
     risk_level = forms.ChoiceField(
         required=False,
         choices=[
@@ -48,12 +54,41 @@ class HistoricalDataFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.fields["county"].queryset = (
             County.objects.order_by("name")
         )
 
+        available_years = (
+            FloodPrediction.objects.filter(
+                observation__is_synthetic=False
+            )
+            .order_by()
+            .values_list(
+                "observation__observation_date__year",
+                flat=True,
+            )
+            .distinct()
+        )
+
+        self.fields["year"].choices = [
+            ("", "All years"),
+            *[
+                (str(year), str(year))
+                for year in sorted(
+                    available_years,
+                    reverse=True,
+                )
+                if year is not None
+            ],
+        ]
+
     def clean(self):
         cleaned_data = super().clean()
+        year = cleaned_data.get("year")
+
+        if year:
+            cleaned_data["year"] = int(year)
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
 

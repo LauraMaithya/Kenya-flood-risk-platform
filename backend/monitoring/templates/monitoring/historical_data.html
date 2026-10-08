@@ -49,6 +49,14 @@
     </div>
 
     <div class="historical-filter-field">
+      <label for="{{ filter_form.year.id_for_label }}">
+        Year
+      </label>
+      {{ filter_form.year }}
+      {{ filter_form.year.errors }}
+    </div>
+
+    <div class="historical-filter-field">
       <label for="{{ filter_form.risk_level.id_for_label }}">
         Risk level
       </label>
@@ -82,6 +90,80 @@
       {{ filter_form.non_field_errors }}
     </div>
   {% endif %}
+</section>
+
+<section
+  class="historical-coverage-card"
+  aria-labelledby="historical-coverage-title"
+>
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Coverage summary</p>
+      <h3 id="historical-coverage-title">
+        Stored historical classifications
+      </h3>
+    </div>
+
+    {% if coverage_summary.first_date %}
+      <p class="historical-coverage-period">
+        {{ coverage_summary.first_date|date:"Y-m-d" }}
+        to
+        {{ coverage_summary.last_date|date:"Y-m-d" }}
+      </p>
+    {% endif %}
+  </div>
+
+  <p class="historical-coverage-note">
+    Counts describe stored model classifications for the
+    selected historical period. They are not a new model
+    accuracy evaluation.
+  </p>
+
+  <div class="historical-coverage-grid">
+    <article class="historical-summary-item">
+      <span>Total records</span>
+      <strong>
+        {{ coverage_summary.total_records }}
+      </strong>
+    </article>
+
+    <article class="historical-summary-item">
+      <span>Counties represented</span>
+      <strong>
+        {{ coverage_summary.counties_covered }}
+      </strong>
+    </article>
+
+    <article class="historical-summary-item risk-high">
+      <span>High risk</span>
+      <strong>
+        {{ coverage_summary.high_count }}
+      </strong>
+      <small>
+        {{ coverage_summary.high_percentage|floatformat:1 }}%
+      </small>
+    </article>
+
+    <article class="historical-summary-item risk-medium">
+      <span>Medium risk</span>
+      <strong>
+        {{ coverage_summary.medium_count }}
+      </strong>
+      <small>
+        {{ coverage_summary.medium_percentage|floatformat:1 }}%
+      </small>
+    </article>
+
+    <article class="historical-summary-item risk-low">
+      <span>Low risk</span>
+      <strong>
+        {{ coverage_summary.low_count }}
+      </strong>
+      <small>
+        {{ coverage_summary.low_percentage|floatformat:1 }}%
+      </small>
+    </article>
+  </div>
 </section>
 
 <section

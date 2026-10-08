@@ -16,6 +16,7 @@ from monitoring.forms import (
     HistoricalDataFilterForm,
 )
 from monitoring.services.historical_data import (
+    historical_coverage_summary,
     historical_prediction_queryset,
 )
 from monitoring.services.alert_history import (
@@ -191,7 +192,11 @@ class HistoricalDataView(ProtectedPageView):
             )
         else:
             predictions = FloodPrediction.objects.none()
-
+        coverage_summary = (
+            historical_coverage_summary(
+                predictions
+            )
+        )
         paginator = Paginator(
             predictions,
             self.paginate_by,
@@ -211,6 +216,9 @@ class HistoricalDataView(ProtectedPageView):
                 "page_obj": page_obj,
                 "predictions": page_obj.object_list,
                 "result_count": paginator.count,
+                "coverage_summary": (
+                    coverage_summary
+                ),
                 "download_query": (
                     download_parameters.urlencode()
                 ),
