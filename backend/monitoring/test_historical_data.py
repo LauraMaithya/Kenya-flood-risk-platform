@@ -339,3 +339,129 @@ class HistoricalDataTests(TestCase):
             response.content,
             b"Invalid historical-data filters.",
         )
+
+    def test_year_filter_applies_to_page_and_download(self):
+        self.create_prediction(
+            county=self.nairobi,
+            observation_date=date(2024, 6, 15),
+            risk_level=FloodPrediction.RiskLevel.HIGH,
+            model_release_id="historical-2024",
+        )
+
+        self.authenticate()
+
+        page_response = self.client.get(
+            self.page_url,
+            {"year": "2025"},
+        )
+
+        self.assertEqual(
+            page_response.status_code,
+            200,
+        )
+        self.assertEqual(
+            page_response.context["result_count"],
+            3,
+        )
+
+        page_predictions = list(
+            page_response.context["predictions"]
+        )
+
+        self.assertTrue(
+            all(
+                prediction.observation.observation_date.year
+                == 2025
+                for prediction in page_predictions
+            )
+        )
+
+        year_choices = dict(
+            page_response.context[
+                "filter_form"
+            ].fields["year"].choices
+        )
+
+        self.assertIn("2025", year_choices)
+        self.assertIn("2024", year_choices)
+
+        download_response = self.client.get(
+            self.download_url,
+            {"year": "2025"},
+        )
+
+        csv_text = download_response.content.decode(
+            "utf-8"
+        )
+        rows = list(
+            csv.DictReader(
+                io.StringIO(csv_text)
+            )
+        )
+
+        self.assertEqual(len(rows), 3)
+        self.assertTrue(
+            all(
+                row["observation_date"].startswith(
+                    "2025-"
+                )
+                for row in rows
+            )
+        )
+
+    def test_coverage_summary_uses_active_filters(self):
+        self.authenticate()
+
+        response = self.client.get(
+            self.page_url,
+            {"county": "nairobi"},
+        )
+
+        summary = response.context[
+            "coverage_summary"
+        ]
+
+        self.assertEqual(
+            summary["total_records"],
+            1,
+        )
+        self.assertEqual(
+            summary["counties_covered"],
+            1,
+        )
+        self.assertEqual(
+            summary["first_date"],
+            date(2025, 1, 10),
+        )
+        self.assertEqual(
+            summary["last_date"],
+            date(2025, 1, 10),
+        )
+        self.assertEqual(
+            summary["high_count"],
+            1,
+        )
+        self.assertEqual(
+            summary["medium_count"],
+            0,
+        )
+        self.assertEqual(
+            summary["low_count"],
+            0,
+        )
+        self.assertEqual(
+            summary["high_percentage"],
+            100.0,
+        )
+        self.assertContains(
+            response,
+            "Stored historical classifications",
+        )
+        self.assertContains(
+            response,
+            "not a new model",
+        )
+        self.assertContains(
+            response,
+            "accuracy evaluation",
+        )
