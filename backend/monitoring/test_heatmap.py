@@ -496,9 +496,8 @@ class DashboardMapAPITests(APITestCase):
         )
         self.assertContains(
             response,
-            "leaflet@1.9.4",
+            "monitoring/vendor/leaflet/leaflet.js",
         )
-
     def test_dashboard_contains_county_selector_contract(self):
         self.client.force_login(self.user)
 

@@ -1,6 +1,8 @@
 {% extends "monitoring/base.html" %}
 {% load static %}
 
+{% block body_class %}dashboard-map-page{% endblock %}
+
 {% block extra_head %}
 <link
   rel="stylesheet"
@@ -11,120 +13,15 @@
 {% endblock %}
 
 {% block content %}
-<section class="page-intro">
-  <div>
-    <h2>National flood-risk overview</h2>
-    <p>
-      Latest county-level predictions from available
-      environmental observations.
-    </p>
-  </div>
-
-  <div class="dashboard-period-summary">
-    <span>
-      Selected period:
-      <strong>{{ selected_period_label }}</strong>
-    </span>
-
-    <span>
-      Latest data in period:
-      <strong>
-        {% if latest_data_date %}
-          {{ latest_data_date|date:"j F Y" }}
-        {% else %}
-          No data available
-        {% endif %}
-      </strong>
-    </span>
-  </div>
-</section>
-
 <section
-  class="kpi-grid"
-  aria-label="Latest flood-risk totals"
+  class="dashboard-explorer"
+  aria-labelledby="map-title"
 >
-  <article class="kpi-card risk-high">
-    <span>High-risk counties</span>
-    <strong>{{ high_risk_count }}</strong>
-  </article>
+  <div class="dashboard-map-stage">
+    <h2 id="map-title" class="map-screenreader-guidance">
+      Kenya Flood-Risk Map
+    </h2>
 
-  <article class="kpi-card risk-medium">
-    <span>Medium-risk counties</span>
-    <strong>{{ medium_risk_count }}</strong>
-  </article>
-
-  <article class="kpi-card risk-low">
-    <span>Low-risk counties</span>
-    <strong>{{ low_risk_count }}</strong>
-  </article>
-
-  <article class="kpi-card risk-monitored">
-    <span>Counties monitored</span>
-    <strong>{{ monitored_count }}</strong>
-  </article>
-</section>
-
-<section class="map-card" aria-labelledby="map-title">
-  <div class="map-card-header">
-    <div>
-      <p class="eyebrow">National view</p>
-      <h2 id="map-title">Kenya Flood-Risk Heatmap</h2>
-      <p>
-        Heat intensity and marker colour show each county's
-        latest flood-risk classification within the selected period.
-      </p>
-    </div>
-        <form
-      method="get"
-      action="{% url 'monitoring-web:dashboard' %}"
-      class="dashboard-period-form"
-      aria-label="Dashboard prediction period"
-    >
-      <div class="dashboard-period-field">
-        <label for="{{ period_form.year.id_for_label }}">
-          Year
-        </label>
-        {{ period_form.year }}
-        {% for error in period_form.year.errors %}
-          <small class="field-error">{{ error }}</small>
-        {% endfor %}
-      </div>
-
-      <div class="dashboard-period-field">
-        <label for="{{ period_form.month.id_for_label }}">
-          Month
-        </label>
-        {{ period_form.month }}
-        {% for error in period_form.month.errors %}
-          <small class="field-error">{{ error }}</small>
-        {% endfor %}
-      </div>
-
-      <div class="dashboard-period-actions">
-        <button
-          type="submit"
-          class="button button-primary"
-        >
-          Update map
-        </button>
-
-        {% if selected_year or selected_month %}
-          <a
-            href="{% url 'monitoring-web:dashboard' %}"
-            class="button button-secondary"
-          >
-            Latest
-          </a>
-        {% endif %}
-      </div>
-
-      {% for error in period_form.non_field_errors %}
-        <p class="field-error">{{ error }}</p>
-      {% endfor %}
-    </form>
-  </div>
-
-  <div class="map-frame">
     <div
       id="kenya-risk-map"
       class="kenya-risk-map"
@@ -134,36 +31,105 @@
       aria-label="Interactive Kenya county flood-risk heatmap"
     ></div>
 
+    <section
+      class="map-kpi-strip"
+      aria-label="Flood-risk totals for selected period"
+    >
+      <article class="map-kpi risk-high">
+        <span class="map-kpi-indicator" aria-hidden="true"></span>
+        <span>High</span>
+        <strong>{{ high_risk_count }}</strong>
+      </article>
+
+      <article class="map-kpi risk-medium">
+        <span class="map-kpi-indicator" aria-hidden="true"></span>
+        <span>Medium</span>
+        <strong>{{ medium_risk_count }}</strong>
+      </article>
+
+      <article class="map-kpi risk-low">
+        <span class="map-kpi-indicator" aria-hidden="true"></span>
+        <span>Low</span>
+        <strong>{{ low_risk_count }}</strong>
+      </article>
+
+      <article class="map-kpi risk-monitored">
+        <span class="map-kpi-indicator" aria-hidden="true"></span>
+        <span>Monitored</span>
+        <strong>{{ monitored_count }}</strong>
+      </article>
+    </section>
+
     <div class="map-county-overlay">
-      <div class="county-control">
-        <p class="eyebrow">Location selector</p>
-        <label for="county-selector">County</label>
+      <label
+        for="county-selector"
+        class="map-screenreader-guidance"
+      >
+        Find a county
+      </label>
 
-        <div class="county-selector-row">
-          <select
-            id="county-selector"
-            data-county-selector
-            aria-describedby="county-selector-help"
-            disabled
-          >
-            <option value="">Loading counties&hellip;</option>
-          </select>
+      <select
+        id="county-selector"
+        data-county-selector
+        aria-describedby="county-selector-help"
+        disabled
+      >
+        <option value="">Loading counties&hellip;</option>
+      </select>
 
-          <button
-            type="button"
-            class="button button-secondary county-reset-button"
-            data-county-reset
-            disabled
-          >
-            Reset map
-          </button>
+      <button
+        type="button"
+        class="map-control-button"
+        data-county-reset
+        disabled
+      >
+        Reset
+      </button>
+
+      <small
+        id="county-selector-help"
+        class="map-screenreader-guidance"
+      >
+        Select a county to zoom in and view its risk for this period.
+      </small>
+    </div>
+
+    <aside
+      class="county-risk-card"
+      data-county-risk-card
+      aria-live="polite"
+      hidden
+    >
+      <div class="county-risk-card-header">
+        <div>
+          <small>Selected county</small>
+          <h3 data-county-name>County</h3>
         </div>
 
-        <small id="county-selector-help">
-          Select a county to zoom in and view its risk for this period.
-        </small>
+        <span
+          class="county-risk-badge"
+          data-county-risk-badge
+        >
+          No data
+        </span>
       </div>
-    </div>
+
+      <dl class="county-risk-details">
+        <div>
+          <dt>Observation date</dt>
+          <dd data-county-observation-date>
+            Not available
+          </dd>
+        </div>
+
+        <div>
+          <dt>Flood risk for period</dt>
+          <dd data-county-risk-level>
+            No current prediction
+          </dd>
+        </div>
+      </dl>
+    </aside>
 
     <div
       class="map-status"
@@ -171,45 +137,11 @@
       role="status"
       aria-live="polite"
     >
-      Loading current county risk data…
-    </div>
-    <aside
-  class="county-risk-card"
-  data-county-risk-card
-  aria-live="polite"
-  hidden
->
-  <div class="county-risk-card-header">
-    <div>
-      <p class="eyebrow">Selected county</p>
-      <h3 data-county-name>County</h3>
+      Loading county risk data&hellip;
     </div>
 
-    <span
-      class="county-risk-badge"
-      data-county-risk-badge
-    >
-      No data
-    </span>
-  </div>
-
-  <dl class="county-risk-details">
-    <div>
-      <dt>Observation date</dt>
-      <dd data-county-observation-date>Not available</dd>
-    </div>
-
-    <div>
-      <dt>Flood risk for period</dt>
-      <dd data-county-risk-level>No current prediction</dd>
-    </div>
-  </dl>
-</aside>
-  </div>
-
-  <div class="map-footer">
     <ul
-      class="risk-legend"
+      class="map-floating-legend"
       aria-label="Flood-risk legend"
     >
       <li>
@@ -226,31 +158,97 @@
       </li>
       <li>
         <span class="legend-dot unavailable"></span>
-        No current data
+        No data
       </li>
     </ul>
 
-    <p class="map-guidance">
+    <form
+      method="get"
+      action="{% url 'monitoring-web:dashboard' %}"
+      class="map-timeline"
+      aria-label="Dashboard prediction period"
+      data-period-form
+    >
+      <button
+        type="button"
+        class="timeline-step"
+        data-period-shift="-1"
+        aria-label="Show previous month"
+        title="Previous month"
+      >
+        &lsaquo;
+      </button>
+
+      <div class="timeline-field">
+        <label for="{{ period_form.year.id_for_label }}">
+          Year
+        </label>
+        {{ period_form.year }}
+      </div>
+
+      <div class="timeline-field">
+        <label for="{{ period_form.month.id_for_label }}">
+          Month
+        </label>
+        {{ period_form.month }}
+      </div>
+
+      <button
+        type="submit"
+        class="timeline-apply"
+      >
+        View
+      </button>
+
+      <button
+        type="button"
+        class="timeline-step"
+        data-period-shift="1"
+        aria-label="Show next month"
+        title="Next month"
+      >
+        &rsaquo;
+      </button>
+
+      {% if selected_year or selected_month %}
+        <a
+          href="{% url 'monitoring-web:dashboard' %}"
+          class="timeline-latest"
+        >
+          Latest
+        </a>
+      {% endif %}
+
+      {% for error in period_form.year.errors %}
+        <small class="field-error">{{ error }}</small>
+      {% endfor %}
+
+      {% for error in period_form.month.errors %}
+        <small class="field-error">{{ error }}</small>
+      {% endfor %}
+
+      {% for error in period_form.non_field_errors %}
+        <small class="field-error">{{ error }}</small>
+      {% endfor %}
+    </form>
+
+    <p class="map-screenreader-guidance">
+      Heat intensity and marker colour show each county's latest flood-risk classification within the selected period.
       Select a marker to view the county's result for this period.
     </p>
-  </div>
 
-  <noscript>
-    <p class="map-error">
-      JavaScript is required to display the interactive map.
-    </p>
-  </noscript>
+    <noscript>
+      <p class="map-error">
+        JavaScript is required to display the interactive map.
+      </p>
+    </noscript>
+  </div>
 </section>
 {% endblock %}
 
 {% block extra_scripts %}
 <script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-  crossorigin=""
-></script>
-<script
-  src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"
+  src="{% static 'monitoring/vendor/leaflet/leaflet.js' %}"
 ></script>
 <script
   src="{% static 'monitoring/js/risk_map.js' %}"
