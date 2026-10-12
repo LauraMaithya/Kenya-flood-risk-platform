@@ -169,19 +169,34 @@ function initialiseRiskMap() {
 
   const map = L.map(mapElement, {
   zoomControl: false,
-  minZoom: 5,
-  maxZoom: 12,
-  maxBounds: KENYA_BOUNDS,
-  maxBoundsViscosity: 0.75,
+  minZoom: 4,
+  maxZoom: 13,
+  preferCanvas: true,
 });
 
-map.fitBounds(KENYA_BOUNDS);
+L.tileLayer(
+  "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+  {
+    subdomains: ["a", "b", "c"],
+    minZoom: 4,
+    maxZoom: 19,
+    crossOrigin: true,
+    updateWhenIdle: true,
+    keepBuffer: 4,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">' +
+      "OpenStreetMap contributors</a>, " +
+      'Tiles by <a href="https://www.hotosm.org/">HOT</a>',
+  }
+).addTo(map);
+
+map.setView([0.25, 37.8], 6);
 
 L.control.zoom({
   position: "bottomleft",
 }).addTo(map);
 
-  map.attributionControl.addAttribution(
+map.attributionControl.addAttribution(
   '<a href="https://www.geoboundaries.org/">' +
     "geoBoundaries</a> (CC BY 4.0)"
 );
@@ -376,6 +391,10 @@ const boundaryLayer = L.geoJSON(
 
     const marker = L.marker(countyCentre, {
       icon: createMarkerIcon(markerCounty),
+      pane: "markerPane",
+      zIndexOffset: 1000,
+      riseOnHover: true,
+      riseOffset: 1200,
       keyboard: true,
       title: `${countyName} County`,
       alt: `${countyName} County flood-risk marker`,
@@ -384,6 +403,7 @@ const boundaryLayer = L.geoJSON(
     marker.bindTooltip(`${countyName} County`, {
       direction: "top",
       offset: [0, -12],
+      opacity: 0.96,
     });
 
     marker.bindPopup(createPopupContent(markerCounty));
@@ -408,9 +428,6 @@ const boundaryLayer = L.geoJSON(
         });
 
         this.bringToFront();
-        statusElement.textContent =
-          `${countyName} County`;
-        statusElement.hidden = false;
       });
 
       layer.on("mouseout", function () {
@@ -444,7 +461,7 @@ const boundaryLayer = L.geoJSON(
 
 const boundaryBounds = boundaryLayer.getBounds();
 
-map.getPane("markerPane").style.zIndex = "650";
+map.getPane("markerPane").style.zIndex = "620";
 
 boundaryLayersByCounty.forEach(({ marker }) => {
   marker.setZIndexOffset(1000);
@@ -511,6 +528,18 @@ resetButton.addEventListener("click", () => {
   window.addEventListener("resize", () => {
     map.invalidateSize();
   });
+
+  if ("ResizeObserver" in window) {
+  const mapResizeObserver = new ResizeObserver(() => {
+    window.requestAnimationFrame(() => {
+      map.invalidateSize({
+        pan: false,
+      });
+    });
+  });
+
+  mapResizeObserver.observe(mapElement);
+}
 }
 
 async function loadBoundaryData(url) {

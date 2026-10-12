@@ -166,7 +166,7 @@ class DashboardPageTests(TestCase):
         )
         self.assertContains(
             response,
-            "National flood-risk overview",
+            "Kenya Flood-Risk Map",
         )
 
     def test_dashboard_shows_zero_counts_without_predictions(self):

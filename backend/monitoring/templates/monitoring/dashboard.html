@@ -7,8 +7,6 @@
 <link
   rel="stylesheet"
   href="{% static 'monitoring/vendor/leaflet/leaflet.css' %}"
-  integrity="sha256-p4NxAoJBhIINfQ3ynhZKJrjMZg0n4ZGTZmKEs2VNTc="
-  crossorigin=""
 >
 {% endblock %}
 
@@ -169,15 +167,6 @@
       aria-label="Dashboard prediction period"
       data-period-form
     >
-      <button
-        type="button"
-        class="timeline-step"
-        data-period-shift="-1"
-        aria-label="Show previous month"
-        title="Previous month"
-      >
-        &lsaquo;
-      </button>
 
       <div class="timeline-field">
         <label for="{{ period_form.year.id_for_label }}">
@@ -198,16 +187,6 @@
         class="timeline-apply"
       >
         View
-      </button>
-
-      <button
-        type="button"
-        class="timeline-step"
-        data-period-shift="1"
-        aria-label="Show next month"
-        title="Next month"
-      >
-        &rsaquo;
       </button>
 
       {% if selected_year or selected_month %}
