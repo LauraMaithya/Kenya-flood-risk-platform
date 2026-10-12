@@ -47,6 +47,20 @@ function initialiseSidebar() {
     return;
   }
 
+  const isDashboard = document.body.classList.contains(
+      "dashboard-map-page"
+    );
+
+    if (isDashboard) {
+      document.body.classList.remove(
+        "sidebar-collapsed",
+        "sidebar-open"
+      );
+
+      toggle.hidden = true;
+      overlay.hidden = true;
+      return;
+    }
   function isDesktop() {
     return desktopBreakpoint.matches;
   }

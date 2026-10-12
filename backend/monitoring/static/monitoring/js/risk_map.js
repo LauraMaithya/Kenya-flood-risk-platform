@@ -4,6 +4,10 @@ const KENYA_BOUNDS = [
   [-4.9, 33.8],
   [5.3, 41.9],
 ];
+const EAST_AFRICA_BOUNDS = [
+  [-12.5, 25.0],
+  [15.5, 52.0],
+];
 
 const RISK_STYLE = {
   High: {
@@ -76,24 +80,6 @@ function createMarkerIcon(county) {
     popupAnchor: [0, -13],
   });
 }
-
-
-function createHeatLayer(points, riskLevel) {
-  const colour = RISK_STYLE[riskLevel].colour;
-
-  return L.heatLayer(points, {
-    radius: 42,
-    blur: 34,
-    maxZoom: 9,
-    minOpacity: 0.28,
-    gradient: {
-      0.2: colour,
-      0.65: colour,
-      1.0: colour,
-    },
-  });
-}
-
 
 async function loadMapData(url) {
   const response = await fetch(url, {
@@ -182,20 +168,35 @@ function initialiseRiskMap() {
   }
 
   const map = L.map(mapElement, {
-    zoomControl: false,
-    minZoom: 5,
-    maxZoom: 12,
-    maxBounds: KENYA_BOUNDS,
-    maxBoundsViscosity: 0.75,
-  });
+  zoomControl: false,
+  minZoom: 4,
+  maxZoom: 13,
+  preferCanvas: true,
+});
 
-  map.fitBounds(KENYA_BOUNDS);
+L.tileLayer(
+  "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+  {
+    subdomains: ["a", "b", "c"],
+    minZoom: 4,
+    maxZoom: 19,
+    crossOrigin: true,
+    updateWhenIdle: true,
+    keepBuffer: 4,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">' +
+      "OpenStreetMap contributors</a>, " +
+      'Tiles by <a href="https://www.hotosm.org/">HOT</a>',
+  }
+).addTo(map);
 
-  L.control.zoom({
-    position: "bottomleft",
-  }).addTo(map);
+map.setView([0.25, 37.8], 6);
 
-  map.attributionControl.addAttribution(
+L.control.zoom({
+  position: "bottomleft",
+}).addTo(map);
+
+map.attributionControl.addAttribution(
   '<a href="https://www.geoboundaries.org/">' +
     "geoBoundaries</a> (CC BY 4.0)"
 );
@@ -218,36 +219,26 @@ const predictionsByCounty = new Map(
 );
 
 const boundaryStyle = {
-  color: "#63859a",
-  weight: 1.25,
-  opacity: 0.9,
-  fillColor: "#dfeeed",
-  fillOpacity: 0.72,
+  color: "#315d66",
+  weight: 1.1,
+  opacity: 0.82,
+  fillColor: "#8eb7b5",
+  fillOpacity: 0.07,
 };
 
 
 function getBoundaryStyle(countyKey, selected = false) {
-  const county = predictionsByCounty.get(countyKey);
-
-  const riskStyle =
-    county?.data_status === "AVAILABLE"
-      ? RISK_STYLE[county.risk_level]
-      : null;
-
   return {
     ...boundaryStyle,
-    fillColor: riskStyle
-      ? riskStyle.colour
-      : NO_DATA_STYLE.colour,
-    fillOpacity: riskStyle ? 0.78 : 0.32,
-    ...(selected
-      ? {
-          color: "#0f4c5c",
-          weight: 3,
-          opacity: 1,
-          fillOpacity: riskStyle ? 0.92 : 0.55,
-        }
-      : {}),
+      ...(selected
+    ? {
+        color: "#063f4b",
+        weight: 2.4,
+        opacity: 1,
+        fillColor: "#4e9694",
+        fillOpacity: 0.15,
+      }
+    : {}),
   };
 }
 
@@ -387,22 +378,56 @@ const boundaryLayer = L.geoJSON(
       const countyKey =
         normaliseCountyName(countyName);
 
-      boundaryLayersByCounty.set(countyKey, {
-        countyName,
-        layer,
-      });
+      const county = predictionsByCounty.get(countyKey);
+
+    const markerCounty = county || {
+      county_name: countyName,
+      data_status: "NO_DATA",
+      risk_level: null,
+      observation_date: null,
+    };
+
+    const countyCentre = layer.getBounds().getCenter();
+
+    const marker = L.marker(countyCentre, {
+      icon: createMarkerIcon(markerCounty),
+      pane: "markerPane",
+      zIndexOffset: 1000,
+      riseOnHover: true,
+      riseOffset: 1200,
+      keyboard: true,
+      title: `${countyName} County`,
+      alt: `${countyName} County flood-risk marker`,
+    });
+
+    marker.bindTooltip(`${countyName} County`, {
+      direction: "top",
+      offset: [0, -12],
+      opacity: 0.96,
+    });
+
+    marker.bindPopup(createPopupContent(markerCounty));
+
+    marker.on("click", () => {
+      selectCounty(countyKey);
+    });
+
+    marker.addTo(map);
+
+    boundaryLayersByCounty.set(countyKey, {
+      countyName,
+      layer,
+      marker,
+    });
 
       layer.on("mouseover", function () {
         this.setStyle({
-          color: "#184e5a",
-          weight: 2.5,
-          fillOpacity: 0.9,
+          color: "#174f5b",
+          weight: 2,
+          fillOpacity: 0.12,
         });
 
         this.bringToFront();
-        statusElement.textContent =
-          `${countyName} County`;
-        statusElement.hidden = false;
       });
 
       layer.on("mouseout", function () {
@@ -436,9 +461,18 @@ const boundaryLayer = L.geoJSON(
 
 const boundaryBounds = boundaryLayer.getBounds();
 
+map.getPane("markerPane").style.zIndex = "620";
+
+boundaryLayersByCounty.forEach(({ marker }) => {
+  marker.setZIndexOffset(1000);
+});
+
 if (boundaryBounds.isValid()) {
+  map.invalidateSize();
+
   map.fitBounds(boundaryBounds, {
     padding: [18, 18],
+    animate: false,
   });
 }
 
@@ -481,92 +515,7 @@ resetButton.addEventListener("click", () => {
   );
 });
 
-      if (!counties.length) {
-        setMapStatus(
-          statusElement,
-          "No county prediction data is currently available.",
-          "empty"
-        );
-        return;
-      }
-
-      const heatPoints = {
-        Low: [],
-        Medium: [],
-        High: [],
-      };
-
-      let plottedCount = 0;
-      let missingCoordinateCount = 0;
-
-      counties.forEach((county) => {
-        if (
-          !county.has_coordinates ||
-          typeof county.latitude !== "number" ||
-          typeof county.longitude !== "number"
-        ) {
-          missingCoordinateCount += 1;
-          return;
-        }
-
-        plottedCount += 1;
-
-        if (
-          county.data_status === "AVAILABLE" &&
-          RISK_STYLE[county.risk_level]
-        ) {
-          heatPoints[county.risk_level].push([
-            county.latitude,
-            county.longitude,
-            RISK_STYLE[county.risk_level].intensity,
-          ]);
-        }
-
-        const marker = L.marker(
-          [county.latitude, county.longitude],
-          {
-            icon: createMarkerIcon(county),
-            keyboard: true,
-            title: `${county.county_name} County`,
-            alt: `${county.county_name} County flood-risk marker`,
-          }
-        );
-
-        marker.bindPopup(createPopupContent(county));
-        marker.addTo(map);
-      });
-
-      ["Low", "Medium", "High"].forEach(
-        (riskLevel) => {
-          if (heatPoints[riskLevel].length) {
-            createHeatLayer(
-              heatPoints[riskLevel],
-              riskLevel
-            ).addTo(map);
-          }
-        }
-      );
-
-      if (!plottedCount) {
-        setMapStatus(
-          statusElement,
-          "Stored counties do not currently have map coordinates.",
-          "empty"
-        );
-        return;
-      }
-
-      if (missingCoordinateCount) {
-        setMapStatus(
-          statusElement,
-          `${plottedCount} counties displayed. ` +
-            `${missingCoordinateCount} counties lack coordinates.`,
-          "warning"
-        );
-        return;
-      }
-
-      statusElement.hidden = true;
+    statusElement.hidden = true;
     })
     .catch((error) => {
       setMapStatus(
@@ -579,6 +528,18 @@ resetButton.addEventListener("click", () => {
   window.addEventListener("resize", () => {
     map.invalidateSize();
   });
+
+  if ("ResizeObserver" in window) {
+  const mapResizeObserver = new ResizeObserver(() => {
+    window.requestAnimationFrame(() => {
+      map.invalidateSize({
+        pan: false,
+      });
+    });
+  });
+
+  mapResizeObserver.observe(mapElement);
+}
 }
 
 async function loadBoundaryData(url) {

@@ -496,9 +496,8 @@ class DashboardMapAPITests(APITestCase):
         )
         self.assertContains(
             response,
-            "leaflet@1.9.4",
+            "monitoring/vendor/leaflet/leaflet.js",
         )
-
     def test_dashboard_contains_county_selector_contract(self):
         self.client.force_login(self.user)
 
@@ -556,13 +555,13 @@ class DashboardMapAPITests(APITestCase):
             response,
             'name="month"',
         )
-        self.assertContains(
-            response,
+        self.assertEqual(
+            response.context["selected_period_label"],
             "April 2025",
         )
-        self.assertContains(
-            response,
-            "30 April 2025",
+        self.assertEqual(
+            response.context["latest_data_date"],
+            date(2025, 4, 30),
         )
         self.assertContains(
             response,
@@ -600,9 +599,9 @@ class DashboardMapAPITests(APITestCase):
             status.HTTP_200_OK,
         )
         self.assertContains(response, "2021")
-        self.assertContains(
-            response,
-            "31 December 2021",
+        self.assertEqual(
+            response.context["latest_data_date"],
+            date(2021, 12, 31),
         )
         self.assertContains(
             response,
