@@ -181,7 +181,15 @@ class HistoricalDataTests(TestCase):
             response,
             "2025-01-11",
         )
-
+        self.assertNotContains(
+            response,
+            "Model release",
+        )
+        for prediction in response.context["predictions"]:
+            self.assertNotContains(
+                response,
+                prediction.model_release_id,
+            )
     def test_county_filter_returns_matching_records(self):
         self.authenticate()
 
@@ -310,6 +318,13 @@ class HistoricalDataTests(TestCase):
         )
 
         self.assertEqual(len(rows), 1)
+        self.assertIn(
+            "model_release_id",
+            rows[0],
+        )
+        self.assertTrue(
+            rows[0]["model_release_id"],
+        )
         self.assertEqual(
             rows[0]["county_name"],
             "Nairobi",
