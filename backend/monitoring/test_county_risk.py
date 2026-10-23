@@ -197,6 +197,23 @@ class CountyRiskPageTests(TestCase):
             FloodPrediction.RiskLevel.HIGH,
         )
 
+        self.assertNotContains(
+            response,
+            "Model release",
+        )
+        self.assertNotContains(
+            response,
+            "Decision rule",
+        )
+        self.assertNotContains(
+            response,
+            "High threshold",
+        )
+        self.assertNotContains(
+            response,
+            latest_real.model_release_id,
+        )
+
     def test_latest_environmental_inputs_are_displayed(self):
         county = self.create_county(
             code="032",
@@ -245,7 +262,6 @@ class CountyRiskPageTests(TestCase):
             response,
             "Seasonal month cosine",
         )
-
     def test_recent_history_is_limited_to_ten_real_results(self):
         county = self.create_county(
             code="022",

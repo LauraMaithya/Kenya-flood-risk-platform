@@ -195,7 +195,6 @@
             <th scope="col">Low probability</th>
             <th scope="col">Medium probability</th>
             <th scope="col">High probability</th>
-            <th scope="col">Model release</th>
           </tr>
         </thead>
 
@@ -229,7 +228,6 @@
               <td>
                 {{ prediction.probability_high|floatformat:3 }}
               </td>
-              <td>{{ prediction.model_release_id }}</td>
             </tr>
           {% endfor %}
         </tbody>

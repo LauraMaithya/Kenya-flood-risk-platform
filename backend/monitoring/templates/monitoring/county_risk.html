@@ -91,13 +91,6 @@
             {% widthratio latest_prediction.probability_high 1 100 %}%
           </strong>
         </article>
-
-        <article class="county-detail-summary-card">
-          <span>Model release</span>
-          <strong class="county-detail-model-id">
-            {{ latest_prediction.model_release_id }}
-          </strong>
-        </article>
       </section>
 
       <section class="county-detail-content-grid">
@@ -126,19 +119,6 @@
               <dt>High</dt>
               <dd>
                 {% widthratio latest_prediction.probability_high 1 100 %}%
-              </dd>
-            </div>
-          </dl>
-
-          <dl class="county-model-details">
-            <div>
-              <dt>Decision rule</dt>
-              <dd>{{ latest_prediction.decision_rule }}</dd>
-            </div>
-            <div>
-              <dt>High threshold</dt>
-              <dd>
-                {{ latest_prediction.high_probability_threshold }}
               </dd>
             </div>
           </dl>
@@ -222,7 +202,6 @@
                 <th scope="col">Low</th>
                 <th scope="col">Medium</th>
                 <th scope="col">High</th>
-                <th scope="col">Model release</th>
               </tr>
             </thead>
             <tbody>
@@ -242,7 +221,6 @@
                   <td>{{ prediction.probability_low }}</td>
                   <td>{{ prediction.probability_medium }}</td>
                   <td>{{ prediction.probability_high }}</td>
-                  <td>{{ prediction.model_release_id }}</td>
                 </tr>
               {% endfor %}
             </tbody>
