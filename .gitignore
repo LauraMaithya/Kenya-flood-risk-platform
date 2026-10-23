@@ -238,3 +238,5 @@ data/synthetic/**
 
 # Serialized model binary
 models/final/**/*.joblib
+# Scheduled live-refresh runtime logs
+logs/
