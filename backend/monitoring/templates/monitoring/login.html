@@ -3,11 +3,11 @@
 {% block title %}Sign in{% endblock %}
 
 {% block content %}
-<div class="auth-card">
-  <p class="eyebrow">Welcome back</p>
-  <h2>Sign in</h2>
+<section class="auth-card" aria-labelledby="sign-in-heading">
+  <h2 id="sign-in-heading">Sign in</h2>
+
   <p class="muted">
-    Use your account to open the monitoring dashboard.
+    Enter your account details to open the monitoring dashboard.
   </p>
 
   <form
@@ -53,8 +53,8 @@
   <p class="auth-switch">
     Need an account?
     <a href="{% url 'monitoring-web:register' %}">
-      Create one
+      Create an account
     </a>
   </p>
-</div>
+</section>
 {% endblock %}

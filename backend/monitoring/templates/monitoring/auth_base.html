@@ -20,23 +20,55 @@
     defer
   ></script>
 </head>
+
 <body class="auth-page">
   <main class="auth-layout">
     <section
-      class="auth-brand"
+      class="auth-panel"
       aria-labelledby="platform-name"
     >
-      <div class="brand-mark" aria-hidden="true">K</div>
-      <p class="eyebrow">Flood-risk decision support</p>
-      <h1 id="platform-name">Kenya Flood Risk Platform</h1>
-      <p>
-        County-level environmental monitoring and
-        early-warning support.
-      </p>
+      <div class="auth-panel-content">
+        <header class="auth-introduction">
+          <a
+            class="auth-brand-name"
+            href="{% url 'monitoring-web:login' %}"
+          >
+            <span class="brand-mark" aria-hidden="true">KFR</span>
+            <span>Kenya Flood Risk Platform</span>
+          </a>
+
+          <h1 id="platform-name">
+            County flood-risk monitoring and early-warning support
+          </h1>
+
+          <p>
+            Review environmental conditions, county risk assessments,
+            historical records, and flood alerts from one platform.
+          </p>
+        </header>
+
+        {% block content %}{% endblock %}
+      </div>
     </section>
 
-    <section class="auth-panel">
-      {% block content %}{% endblock %}
+    <section
+      class="auth-visual"
+      aria-label="Kenya Flood Risk Platform"
+    >
+      <div class="water-droplets" aria-hidden="true">
+        <span class="water-drop water-drop-1"></span>
+        <span class="water-drop water-drop-2"></span>
+        <span class="water-drop water-drop-3"></span>
+        <span class="water-drop water-drop-4"></span>
+        <span class="water-drop water-drop-5"></span>
+        <span class="water-drop water-drop-6"></span>
+        <span class="water-drop water-drop-7"></span>
+        <span class="water-drop water-drop-8"></span>
+        <span class="water-drop water-drop-9"></span>
+        <span class="water-drop water-drop-10"></span>
+        <span class="water-drop water-drop-11"></span>
+        <span class="water-drop water-drop-12"></span>
+      </div>
     </section>
   </main>
 </body>

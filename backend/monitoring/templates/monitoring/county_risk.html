@@ -2,24 +2,33 @@
 
 {% block content %}
 <section class="county-risk-page">
-  <div class="page-introduction">
-    <div>
-      <p class="eyebrow">County-level monitoring</p>
-      <h2>County flood-risk details</h2>
-      <p>
-        Select a county to review its latest real flood-risk
-        prediction and environmental measurements.
-      </p>
-    </div>
-  </div>
-
   {% if county_count %}
-    <section class="county-detail-filter-card">
-      <form method="get" class="county-detail-filter-form">
-        <div class="county-detail-filter-field">
-          <label for="{{ county_form.county.id_for_label }}">
+    <section
+      class="county-selector-card"
+      aria-labelledby="county-selector-heading"
+    >
+      <div class="county-selector-heading">
+        <div>
+          <h2 id="county-selector-heading">
+            Find a county
+          </h2>
+        </div>
+
+        <span class="county-selector-count">
+          {{ county_count }}
+          count{{ county_count|pluralize:"y,ies" }} available
+        </span>
+      </div>
+
+      <form method="get" class="county-selector-form">
+        <div class="county-select-field">
+          <label
+            class="sr-only"
+            for="{{ county_form.county.id_for_label }}"
+          >
             County
           </label>
+
           {{ county_form.county }}
           {{ county_form.county.errors }}
         </div>
@@ -40,149 +49,187 @@
   {% endif %}
 
   {% if selected_county %}
-    <section class="county-detail-heading-card">
-      <div>
-        <p class="eyebrow">Selected county</p>
-        <h3>{{ selected_county.name }} County</h3>
-        <p>
-          County code: {{ selected_county.code }}
-          {% if selected_county.has_nasa_power_coverage %}
-            · NASA POWER coverage available
-          {% else %}
-            · NASA POWER coverage unavailable
-          {% endif %}
-        </p>
-      </div>
+    <section class="county-overview-card">
+      <div class="county-overview-main">
+        <div>
+          <h3>{{ selected_county.name }} County</h3>
 
-      {% if latest_prediction %}
-        <span
-          class="county-detail-risk-badge"
-          data-risk="{{ latest_prediction.risk_level }}"
-        >
-          {{ latest_prediction.risk_level }} risk
-        </span>
-      {% else %}
-        <span
-          class="county-detail-risk-badge"
-          data-risk="No data"
-        >
-          No current data
-        </span>
-      {% endif %}
+          <p class="county-overview-meta">
+            County code {{ selected_county.code }}
+            {% if latest_observation %}
+              <span aria-hidden="true">&bull;</span>
+              Latest observation
+              {{ latest_observation.observation_date|date:"j F Y" }}
+            {% endif %}
+          </p>
+        </div>
+
+        {% if latest_prediction %}
+          <span
+            class="county-detail-risk-badge county-overview-risk"
+            data-risk="{{ latest_prediction.risk_level }}"
+          >
+            {{ latest_prediction.risk_level }} risk
+          </span>
+        {% else %}
+          <span
+            class="county-detail-risk-badge county-overview-risk"
+            data-risk="No data"
+          >
+            No current data
+          </span>
+        {% endif %}
+      </div>
     </section>
 
     {% if latest_prediction %}
-      <section class="county-detail-summary-grid">
-        <article class="county-detail-summary-card">
-          <span>Observation date</span>
-          <strong>
+      <section
+        class="county-measurements-section"
+        aria-labelledby="latest-conditions-heading"
+      >
+        <div class="section-heading">
+          <div>
+            <h3 id="latest-conditions-heading">
+              Environmental readings
+            </h3>
+          </div>
+
+          <p>
+            Recorded
             {{ latest_observation.observation_date|date:"j F Y" }}
-          </strong>
-        </article>
+          </p>
+        </div>
 
-        <article class="county-detail-summary-card">
-          <span>Current risk</span>
-          <strong>{{ latest_prediction.risk_level }}</strong>
-        </article>
+        <div class="county-measurement-cards">
+          <article class="county-measurement-card">
+            <strong>
+              {{ latest_observation.precipitation_max_mm }}
+              <small>mm</small>
+            </strong>
 
-        <article class="county-detail-summary-card">
-          <span>High-risk probability</span>
-          <strong>
-            {% widthratio latest_prediction.probability_high 1 100 %}%
-          </strong>
-        </article>
+            <span class="county-measurement-label">
+              Maximum precipitation
+            </span>
+          </article>
+
+          <article class="county-measurement-card">
+            <strong>
+              {{ latest_observation.temperature_mean_c }}
+              <small>&deg;C</small>
+            </strong>
+
+            <span class="county-measurement-label">
+              Average temperature
+            </span>
+          </article>
+
+          <article class="county-measurement-card">
+            <strong>
+              {{ latest_observation.relative_humidity_mean_pct }}
+              <small>%</small>
+            </strong>
+
+            <span class="county-measurement-label">
+              Relative humidity
+            </span>
+          </article>
+
+          <article class="county-measurement-card">
+            <strong>
+              {{ latest_observation.soil_wetness_mean_fraction }}
+            </strong>
+
+            <span class="county-measurement-label">
+              Mean soil wetness
+            </span>
+          </article>
+        </div>
       </section>
 
-      <section class="county-detail-content-grid">
+      <section class="county-analysis-grid">
         <article class="county-detail-card">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Model output</p>
-              <h3>Risk probabilities</h3>
+              <h3>Prediction confidence</h3>
             </div>
           </div>
 
-          <dl class="county-probability-list">
-            <div>
-              <dt>Low</dt>
-              <dd>
-                {% widthratio latest_prediction.probability_low 1 100 %}%
-              </dd>
+          <div
+              class="county-confidence-chart"
+              data-confidence-chart
+              data-low="{{ latest_prediction.probability_low }}"
+              data-medium="{{ latest_prediction.probability_medium }}"
+              data-high="{{ latest_prediction.probability_high }}"
+            >
+              <div
+                class="county-confidence-donut"
+                data-confidence-donut
+                role="img"
+              >
+                <div class="county-confidence-centre">
+                  <strong>{{ latest_prediction.risk_level }}</strong>
+                  <span>Current risk</span>
+                </div>
+              </div>
+
+              <dl class="county-confidence-legend">
+                <div data-risk="Low">
+                  <dt>Low risk</dt>
+                  <dd>
+                    {% widthratio latest_prediction.probability_low 1 100 %}%
+                  </dd>
+                </div>
+
+                <div data-risk="Medium">
+                  <dt>Medium risk</dt>
+                  <dd>
+                    {% widthratio latest_prediction.probability_medium 1 100 %}%
+                  </dd>
+                </div>
+
+                <div data-risk="High">
+                  <dt>High risk</dt>
+                  <dd>
+                    {% widthratio latest_prediction.probability_high 1 100 %}%
+                  </dd>
+                </div>
+              </dl>
             </div>
-            <div>
-              <dt>Medium</dt>
-              <dd>
-                {% widthratio latest_prediction.probability_medium 1 100 %}%
-              </dd>
-            </div>
-            <div>
-              <dt>High</dt>
-              <dd>
-                {% widthratio latest_prediction.probability_high 1 100 %}%
-              </dd>
-            </div>
-          </dl>
         </article>
 
         <article class="county-detail-card">
           <div class="section-heading">
-            <div>
-              <p class="eyebrow">Environmental inputs</p>
-              <h3>Latest measurements</h3>
-            </div>
+            <h3>Recent High-risk probabilities</h3>
           </div>
 
-          <dl class="county-measurement-grid">
-            <div>
-              <dt>Maximum precipitation</dt>
-              <dd>
-                {{ latest_observation.precipitation_max_mm }}
-                mm
-              </dd>
-            </div>
-            <div>
-              <dt>Mean temperature</dt>
-              <dd>
-                {{ latest_observation.temperature_mean_c }}
-                °C
-              </dd>
-            </div>
-            <div>
-              <dt>Mean relative humidity</dt>
-              <dd>
-                {{ latest_observation.relative_humidity_mean_pct }}
-                %
-              </dd>
-            </div>
-            <div>
-              <dt>Mean soil wetness</dt>
-              <dd>
-                {{ latest_observation.soil_wetness_mean_fraction }}
-              </dd>
-            </div>
-            <div>
-              <dt>Maximum soil wetness</dt>
-              <dd>
-                {{ latest_observation.soil_wetness_max_fraction }}
-              </dd>
-            </div>
-            <div>
-              <dt>Seasonal month sine</dt>
-              <dd>{{ latest_observation.month_sin }}</dd>
-            </div>
-            <div>
-              <dt>Seasonal month cosine</dt>
-              <dd>{{ latest_observation.month_cos }}</dd>
-            </div>
-          </dl>
+          {% if recent_predictions %}
+            <ol class="county-probability-history">
+              {% for prediction in recent_predictions|slice:":5" %}
+                <li>
+                  <time
+                    datetime="{{ prediction.observation.observation_date|date:'Y-m-d' }}"
+                  >
+                    {{ prediction.observation.observation_date|date:"j M Y" }}
+                  </time>
+
+                  <strong>
+                    {% widthratio prediction.probability_high 1 100 %}%
+                  </strong>
+                </li>
+              {% endfor %}
+            </ol>
+          {% else %}
+            <p class="county-trend-empty">
+              No recent prediction history is available.
+            </p>
+          {% endif %}
         </article>
       </section>
 
       <section class="county-detail-history-card">
-        <div class="section-heading">
+        <div class="section-heading county-history-heading">
           <div>
-            <p class="eyebrow">Recent results</p>
-            <h3>{{ selected_county.name }} prediction history</h3>
+            <h3>{{ selected_county.name }} risk history</h3>
           </div>
 
           <a
@@ -193,22 +240,26 @@
           </a>
         </div>
 
-        <div class="county-history-table-wrapper">
-          <table class="county-history-table">
+        <div
+          class="county-history-table-wrapper historical-table-wrapper"
+        >
+          <table class="county-history-table historical-table">
             <thead>
               <tr>
                 <th scope="col">Observation date</th>
-                <th scope="col">Risk</th>
-                <th scope="col">Low</th>
-                <th scope="col">Medium</th>
-                <th scope="col">High</th>
+                <th scope="col">Risk level</th>
+                <th scope="col">Precipitation</th>
+                <th scope="col">Temperature</th>
+                <th scope="col">Humidity</th>
+                <th scope="col">High probability</th>
               </tr>
             </thead>
+
             <tbody>
               {% for prediction in recent_predictions %}
                 <tr>
                   <td>
-                    {{ prediction.observation.observation_date }}
+                    {{ prediction.observation.observation_date|date:"j M Y" }}
                   </td>
                   <td>
                     <span
@@ -218,15 +269,62 @@
                       {{ prediction.risk_level }}
                     </span>
                   </td>
-                  <td>{{ prediction.probability_low }}</td>
-                  <td>{{ prediction.probability_medium }}</td>
-                  <td>{{ prediction.probability_high }}</td>
+                  <td>
+                    {{ prediction.observation.precipitation_max_mm }}
+                    mm
+                  </td>
+                  <td>
+                    {{ prediction.observation.temperature_mean_c }}
+                    &deg;C
+                  </td>
+                  <td>
+                    {{ prediction.observation.relative_humidity_mean_pct }}
+                    %
+                  </td>
+                  <td>
+                    {% widthratio prediction.probability_high 1 100 %}%
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6">
+                    No recent observations are available.
+                  </td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
       </section>
+
+      <details class="county-data-details">
+        <summary>Data and quality information</summary>
+
+        <div class="county-data-details-grid">
+          <div>
+            <span>Observation date</span>
+            <strong>
+              {{ latest_observation.observation_date|date:"j F Y" }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Record type</span>
+            <strong>Real observation</strong>
+          </div>
+
+          <div>
+            <span>Quality review</span>
+            <strong>
+              {% if latest_observation.quality_review_required %}
+                Required
+              {% else %}
+                Not required
+              {% endif %}
+            </strong>
+          </div>
+        </div>
+      </details>
     {% else %}
       <section class="county-detail-empty-state">
         <h3>No current prediction</h3>
@@ -238,10 +336,9 @@
     {% endif %}
   {% elif county_count %}
     <section class="county-detail-empty-state">
-      <h3>Select a county</h3>
       <p>
-        Use the selector above to view the county’s latest
-        flood-risk result and environmental measurements.
+        Search for a county above to review its latest flood-risk
+        assessment and environmental measurements.
       </p>
     </section>
   {% endif %}

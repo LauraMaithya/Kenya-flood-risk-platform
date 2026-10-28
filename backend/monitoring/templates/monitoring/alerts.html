@@ -2,48 +2,48 @@
 
 {% block content %}
 <section class="alerts-page">
-  <div class="page-introduction">
-    <div>
-      <p class="eyebrow">Flood-risk notifications</p>
-      <h2>Alert monitoring</h2>
-      <p>
-        Review notifications generated from genuine High-risk
-        flood predictions.
-      </p>
-    </div>
-  </div>
+  <header class="alerts-introduction">
+    <h2>Alert monitoring</h2>
+
+    <span class="alerts-monitoring-state">
+      Monitoring active
+    </span>
+</header>
 
   <section
-    class="alert-summary-grid"
-    aria-label="Alert status summary"
-  >
-    <article class="alert-summary-card">
-      <span>Total alerts</span>
-      <strong>{{ total_alert_count }}</strong>
-    </article>
+  class="alert-summary-panel"
+  aria-labelledby="alert-summary-heading"
+>
+  <div class="alert-summary-heading">
+    <h3 id="alert-summary-heading">Alert status summary</h3>
+  </div>
 
-    <article class="alert-summary-card alert-summary-pending">
-      <span>Pending</span>
-      <strong>{{ pending_alert_count }}</strong>
-    </article>
+  <dl class="alert-summary-list">
+    <div class="alert-summary-total">
+      <dd>{{ total_alert_count }}</dd>
+      <dt>Total alerts</dt>
+    </div>
 
-    <article class="alert-summary-card alert-summary-sent">
-      <span>Sent</span>
-      <strong>{{ sent_alert_count }}</strong>
-    </article>
+    <div class="alert-summary-pending">
+      <dd>{{ pending_alert_count }}</dd>
+      <dt>Pending</dt>
+    </div>
 
-    <article class="alert-summary-card alert-summary-failed">
-      <span>Failed</span>
-      <strong>{{ failed_alert_count }}</strong>
-    </article>
-  </section>
+    <div class="alert-summary-sent">
+      <dd>{{ sent_alert_count }}</dd>
+      <dt>Sent</dt>
+    </div>
+
+    <div class="alert-summary-failed">
+      <dd>{{ failed_alert_count }}</dd>
+      <dt>Failed</dt>
+    </div>
+  </dl>
+</section>
 
   <section class="alert-filter-card">
     <div class="section-heading">
-      <div>
-        <p class="eyebrow">Filter alerts</p>
-        <h3>Notification records</h3>
-      </div>
+      <h3>Filter records</h3>
 
       <a
         class="alert-clear-link"
@@ -85,17 +85,16 @@
   </section>
 
   <section class="alert-results-card">
-    <div class="section-heading">
-      <div>
-        <p class="eyebrow">Alert history</p>
+    {% if alerts %}
+      <div class="section-heading">
         <h3>Generated notifications</h3>
-      </div>
 
-      <p class="alert-result-count">
-        {{ result_count }}
-        alert{{ result_count|pluralize }}
-      </p>
-    </div>
+        <p class="alert-result-count">
+          {{ result_count }}
+          alert{{ result_count|pluralize }}
+        </p>
+      </div>
+    {% endif %}
 
     {% if alerts %}
       <div class="alert-table-wrapper">
@@ -111,26 +110,26 @@
               <th scope="col">Created</th>
             </tr>
           </thead>
+
           <tbody>
             {% for alert in alerts %}
-              <tr>
+              <tr data-alert-status="{{ alert.status }}">
                 <td>
                   <strong>
                     {{ alert.prediction.observation.county.name }}
                   </strong>
                 </td>
+
                 <td>
                   {{ alert.prediction.observation.observation_date }}
                 </td>
+
                 <td>
-                  <span
-                    class="alert-channel-badge"
-                    data-channel="{{ alert.channel }}"
-                  >
-                    {{ alert.get_channel_display }}
-                  </span>
+                  {{ alert.get_channel_display }}
                 </td>
+
                 <td>{{ alert.recipient }}</td>
+
                 <td>
                   <span
                     class="alert-status-badge"
@@ -145,9 +144,11 @@
                     </small>
                   {% endif %}
                 </td>
+
                 <td class="alert-message">
                   {{ alert.message }}
                 </td>
+
                 <td>
                   <time datetime="{{ alert.created_at|date:'c' }}">
                     {{ alert.created_at|date:"d M Y, H:i" }}
@@ -193,13 +194,9 @@
         </nav>
       {% endif %}
     {% else %}
-      <div class="alert-empty-state">
-        <h4>No alerts found</h4>
-        <p>
-          No genuine High-risk notification records match the
-          selected filters.
-        </p>
-      </div>
+      <p class="alert-empty-state">
+        No alerts found
+      </p>
     {% endif %}
   </section>
 </section>
