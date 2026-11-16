@@ -207,11 +207,4 @@ Potential areas for future development include:
 - Incorporating additional hydrological and environmental data sources.
 - Continuously evaluating and improving model performance as more reliable observations become available.
 
-## Project Repository
 
-**GitHub Repository:** [Kenya Flood Monitoring and Prediction Platform](https://github.com/LauraMaithya/Kenya-flood-risk-platform)
-
-
-**Project:** An IoT-Based Flood Monitoring Platform Using Random Forest Classification for Real-Time Data Display and Flood Prediction.
-
-**Academic Year:** 2026
