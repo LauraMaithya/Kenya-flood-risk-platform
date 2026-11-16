@@ -161,6 +161,27 @@ The dataset contains:
 
 The dashboard map represents all 47 Kenyan counties. However, historical model predictor coverage is available for 34 counties. The remaining counties are not assigned historical model coverage through synthetic data.
 
+## Application Screenshots
+
+### Flood Monitoring Dashboard
+
+The dashboard provides an overview of flood-risk conditions across supported Kenyan counties, including risk indicators, geographical visualisation and date-based filtering.
+
+<img width="959" height="415" alt="image" src="https://github.com/user-attachments/assets/4bd0e139-d362-426c-9fba-50360e1716a9" />
+
+### Historical Data Exploration
+
+Users can explore historical flood-risk records using county, date and risk-level filters, with support for CSV export.
+
+<img width="958" height="412" alt="image" src="https://github.com/user-attachments/assets/b6065bde-c088-4a2a-aecb-afa87559d4c3" />
+
+### County Risk
+
+The County Risk interface displays the conditions of the specific county chosen by the user.
+
+<img width="959" height="416" alt="image" src="https://github.com/user-attachments/assets/2b484285-b43d-4ba5-9578-c2090c3a3d54" />
+
+
 ## Project Limitations
 
 The following limitations define the current implementation:
