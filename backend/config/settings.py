@@ -73,6 +73,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'monitoring.context_processors.alert_navigation',
             ],
         },
     },
@@ -169,3 +170,27 @@ REST_FRAMEWORK = {
 LOGIN_URL = "monitoring-web:login"
 LOGIN_REDIRECT_URL = "monitoring-web:dashboard"
 LOGOUT_REDIRECT_URL = "monitoring-web:login"
+
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() == "true"
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    "Kenya Flood Risk Platform <alerts@example.com>",
+)
+ALERT_EMAIL_RECIPIENTS = [
+    recipient.strip()
+    for recipient in os.getenv("ALERT_EMAIL_RECIPIENTS", "").split(",")
+    if recipient.strip()
+]
+IN_APP_ALERT_RECIPIENT = os.getenv(
+    "IN_APP_ALERT_RECIPIENT",
+    "platform-users",
+)

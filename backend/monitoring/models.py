@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -689,6 +690,15 @@ class AlertNotification(models.Model):
         default=Status.PENDING,
     )
     failure_reason = models.TextField(blank=True, default="")
+    is_test = models.BooleanField(default=False)
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    acknowledged_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acknowledged_alert_notifications",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     sent_at = models.DateTimeField(null=True, blank=True)
 
@@ -699,10 +709,19 @@ class AlertNotification(models.Model):
                 fields=["status", "created_at"],
                 name="alert_status_date_idx",
             ),
+            models.Index(
+                fields=["channel", "acknowledged_at", "created_at"],
+                name="alert_ack_date_idx",
+            ),
         ]
         constraints = [
             models.UniqueConstraint(
-                fields=["prediction", "channel", "recipient"],
+                fields=[
+                    "prediction",
+                    "channel",
+                    "recipient",
+                    "is_test",
+                ],
                 name="unique_prediction_alert_recipient",
             ),
             models.CheckConstraint(

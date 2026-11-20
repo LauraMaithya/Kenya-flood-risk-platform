@@ -159,6 +159,60 @@ function initialiseSidebar() {
   applyResponsiveState();
 }
 
+function initialiseConfidenceChart() {
+  const chart = document.querySelector(
+    "[data-confidence-chart]"
+  );
+  const donut = document.querySelector(
+    "[data-confidence-donut]"
+  );
+
+  if (!chart || !donut) {
+    return;
+  }
+
+  function toPercentage(value) {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+      return 0;
+    }
+
+    return Math.min(
+      100,
+      Math.max(0, number * 100)
+    );
+  }
+
+  const low = toPercentage(chart.dataset.low);
+  const medium = toPercentage(chart.dataset.medium);
+  const high = toPercentage(chart.dataset.high);
+
+  const lowEnd = low;
+  const mediumEnd = Math.min(100, low + medium);
+  const highEnd = Math.min(
+    100,
+    low + medium + high
+  );
+
+  donut.style.background = [
+    "conic-gradient(",
+    `var(--low) 0% ${lowEnd}%,`,
+    `var(--medium) ${lowEnd}% ${mediumEnd}%,`,
+    `var(--high) ${mediumEnd}% ${highEnd}%,`,
+    `#dce5e8 ${highEnd}% 100%`,
+    ")",
+  ].join(" ");
+
+  donut.setAttribute(
+    "aria-label",
+    [
+      `Low-risk probability ${Math.round(low)}%.`,
+      `Medium-risk probability ${Math.round(medium)}%.`,
+      `High-risk probability ${Math.round(high)}%.`,
+    ].join(" ")
+  );
+}
 
 function initialiseLogout() {
   const logoutButton = document.querySelector(
@@ -211,5 +265,6 @@ function initialiseLogout() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initialiseSidebar();
+  initialiseConfidenceChart();
   initialiseLogout();
 });

@@ -1,14 +1,15 @@
 import csv
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Max, OuterRef, Q, Subquery
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import TemplateView
 import calendar
 from urllib.parse import urlencode
-from monitoring.models import County, FloodPrediction
+from monitoring.models import AlertNotification, County, FloodPrediction
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from monitoring.forms import (
@@ -24,6 +25,10 @@ from monitoring.services.historical_data import (
 from monitoring.services.alert_history import (
     alert_notification_queryset,
     alert_status_summary,
+)
+from monitoring.services.alert_service import (
+    AlertServiceError,
+    acknowledge_alert,
 )
 from monitoring.services.county_risk import (
     latest_county_prediction,
@@ -408,6 +413,26 @@ class AlertsPageView(ProtectedPageView):
         )
 
         return context
+
+
+class AlertAcknowledgeView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        alert = get_object_or_404(
+            AlertNotification.objects.filter(
+                prediction__observation__is_synthetic=False,
+                is_test=False,
+            ),
+            pk=pk,
+        )
+
+        try:
+            acknowledge_alert(alert, request.user)
+        except AlertServiceError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Alert acknowledged.")
+
+        return redirect("monitoring-web:alerts")
 
 
 class ProfilePageView(ProtectedPageView):

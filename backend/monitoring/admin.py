@@ -78,10 +78,17 @@ class AlertNotificationAdmin(admin.ModelAdmin):
         "channel",
         "recipient",
         "status",
+        "is_test",
+        "acknowledged_at",
         "created_at",
         "sent_at",
     )
-    list_filter = ("channel", "status")
+    list_filter = (
+        "channel",
+        "status",
+        "is_test",
+        "acknowledged_at",
+    )
     search_fields = (
         "recipient",
         "prediction__observation__county__name",
@@ -90,4 +97,5 @@ class AlertNotificationAdmin(admin.ModelAdmin):
         "prediction",
         "prediction__observation",
         "prediction__observation__county",
+        "acknowledged_by",
     )

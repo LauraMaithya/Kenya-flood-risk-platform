@@ -7,19 +7,17 @@
     aria-expanded="true"
   >
     <span class="sr-only">Toggle navigation</span>
-    <span aria-hidden="true">☰</span>
+    <span class="menu-glyph" aria-hidden="true"></span>
   </button>
 
-  <div>
-    <h1>{{ page_title|default:"Dashboard" }}</h1>
-  </div>
+  <h1>{{ page_title|default:"Dashboard" }}</h1>
 
   <div class="header-user">
     <span class="user-avatar" aria-hidden="true">
       {{ request.user.username|first|upper }}
     </span>
 
-    <span>
+    <span class="header-user-details">
       <strong>
         {{ request.user.get_full_name|default:request.user.username }}
       </strong>

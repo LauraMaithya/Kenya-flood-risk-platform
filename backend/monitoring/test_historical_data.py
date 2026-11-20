@@ -472,11 +472,14 @@ class HistoricalDataTests(TestCase):
             response,
             "Stored historical classifications",
         )
-        self.assertContains(
+        self.assertNotContains(
             response,
-            "not a new model",
+            (
+                "Stored classifications for the selected "
+                "historical period."
+            ),
         )
-        self.assertContains(
+        self.assertNotContains(
             response,
-            "accuracy evaluation",
+            "Stored classifications for the selected historical period.",
         )

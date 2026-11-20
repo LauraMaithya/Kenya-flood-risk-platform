@@ -1,28 +1,97 @@
 {% extends "monitoring/base.html" %}
 
 {% block content %}
-<section class="profile-card">
-  <div class="profile-avatar" aria-hidden="true">
-    {{ request.user.username|first|upper }}
-  </div>
+<section class="profile-page">
+  <header class="profile-introduction">
+    <div>
+      <h2>Your profile</h2>
+      <p>
+        Review your account identity and access information.
+      </p>
+    </div>
 
-  <div>
-    <p class="eyebrow">Account details</p>
-    <h2>
-      {{ request.user.get_full_name|default:request.user.username }}
-    </h2>
+    <span class="profile-account-status">
+      Active account
+    </span>
+  </header>
 
-    <dl>
-      <div>
-        <dt>Username</dt>
-        <dd>{{ request.user.username }}</dd>
+  <section class="profile-card">
+    <div class="profile-identity">
+      <div class="profile-identity-pattern" aria-hidden="true"></div>
+
+      <div class="profile-avatar" aria-hidden="true">
+        {{ request.user.username|first|upper }}
       </div>
 
-      <div>
-        <dt>Email</dt>
-        <dd>{{ request.user.email|default:"Not provided" }}</dd>
+      <div class="profile-identity-copy">
+        <span>Platform member</span>
+
+        <h3>
+          {{ request.user.get_full_name|default:request.user.username }}
+        </h3>
+
+        <p>@{{ request.user.username }}</p>
       </div>
-    </dl>
-  </div>
+    </div>
+
+    <div class="profile-details">
+      <header class="profile-details-heading">
+        <div>
+          <h3>Account details</h3>
+          <p>
+            Information connected to your monitoring account.
+          </p>
+        </div>
+
+        <span class="profile-details-mark" aria-hidden="true">
+          KFR
+        </span>
+      </header>
+
+      <dl class="profile-information-grid">
+        <div>
+          <dt>Username</dt>
+          <dd>{{ request.user.username }}</dd>
+        </div>
+
+        <div>
+          <dt>Email address</dt>
+          <dd>
+            {{ request.user.email|default:"Not provided" }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Account created</dt>
+          <dd>
+            {{ request.user.date_joined|date:"j F Y" }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Last sign in</dt>
+          <dd>
+            {% if request.user.last_login %}
+              {{ request.user.last_login|date:"j F Y, H:i" }}
+            {% else %}
+              No previous sign in
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+
+      <div class="profile-access-note">
+        <span class="profile-access-indicator" aria-hidden="true"></span>
+
+        <div>
+          <strong>Monitoring access enabled</strong>
+          <p>
+            This account can access county risk information,
+            historical records, and alert monitoring.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
 </section>
 {% endblock %}

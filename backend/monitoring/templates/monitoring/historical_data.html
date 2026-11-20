@@ -3,273 +3,252 @@
 {% block title %}Historical Data{% endblock %}
 
 {% block content %}
-<section class="page-intro">
-  <div>
-    <h2>Historical flood-risk records</h2>
-    <p>
-      Review and download real county-level flood-risk predictions.
-    </p>
-  </div>
-
-  <a
-    class="button button-primary"
-    href="{% url 'monitoring-web:historical-data-download' %}{% if download_query %}?{{ download_query }}{% endif %}"
+<section class="historical-page">
+  <section
+    class="historical-filter-card"
+    aria-labelledby="historical-filter-title"
   >
-    Download CSV
-  </a>
-</section>
+    <div class="section-heading historical-filter-heading">
+      <div>
+        <h2 id="historical-filter-title">Filter records</h2>
+      </div>
 
-<section
-  class="historical-filter-card"
-  aria-labelledby="historical-filter-title"
->
-  <div class="section-heading">
-    <div>
-      <p class="eyebrow">Filter records</p>
-      <h3 id="historical-filter-title">
-        Select a county, date range or risk level
-      </h3>
-    </div>
+      <div class="historical-filter-actions">
+        <a
+          class="historical-clear-link"
+          href="{% url 'monitoring-web:historical-data' %}"
+        >
+          Clear filters
+        </a>
 
-    <a
-      class="historical-clear-link"
-      href="{% url 'monitoring-web:historical-data' %}"
-    >
-      Clear filters
-    </a>
-  </div>
+        <a
+          class="historical-download-button"
+          href="{% url 'monitoring-web:historical-data-download' %}{% if download_query %}?{{ download_query }}{% endif %}"
+        >
+          Download CSV
+        </a>
+      </div>
+</div>
 
-  <form method="get" class="historical-filter-form">
-    <div class="historical-filter-field">
-      <label for="{{ filter_form.county.id_for_label }}">
-        County
-      </label>
-      {{ filter_form.county }}
-      {{ filter_form.county.errors }}
-    </div>
+    <form method="get" class="historical-filter-form">
+      <div class="historical-filter-field">
+        <label for="{{ filter_form.county.id_for_label }}">
+          County
+        </label>
+        {{ filter_form.county }}
+        {{ filter_form.county.errors }}
+      </div>
 
-    <div class="historical-filter-field">
-      <label for="{{ filter_form.year.id_for_label }}">
-        Year
-      </label>
-      {{ filter_form.year }}
-      {{ filter_form.year.errors }}
-    </div>
+      <div class="historical-filter-field">
+        <label for="{{ filter_form.year.id_for_label }}">
+          Year
+        </label>
+        {{ filter_form.year }}
+        {{ filter_form.year.errors }}
+      </div>
 
-    <div class="historical-filter-field">
-      <label for="{{ filter_form.risk_level.id_for_label }}">
-        Risk level
-      </label>
-      {{ filter_form.risk_level }}
-      {{ filter_form.risk_level.errors }}
-    </div>
+      <div class="historical-filter-field">
+        <label for="{{ filter_form.risk_level.id_for_label }}">
+          Risk level
+        </label>
+        {{ filter_form.risk_level }}
+        {{ filter_form.risk_level.errors }}
+      </div>
 
-    <div class="historical-filter-field">
-      <label for="{{ filter_form.start_date.id_for_label }}">
-        Start date
-      </label>
-      {{ filter_form.start_date }}
-      {{ filter_form.start_date.errors }}
-    </div>
+      <div class="historical-filter-field">
+        <label for="{{ filter_form.start_date.id_for_label }}">
+          Start date
+        </label>
+        {{ filter_form.start_date }}
+        {{ filter_form.start_date.errors }}
+      </div>
 
-    <div class="historical-filter-field">
-      <label for="{{ filter_form.end_date.id_for_label }}">
-        End date
-      </label>
-      {{ filter_form.end_date }}
-      {{ filter_form.end_date.errors }}
-    </div>
+      <div class="historical-filter-field">
+        <label for="{{ filter_form.end_date.id_for_label }}">
+          End date
+        </label>
+        {{ filter_form.end_date }}
+        {{ filter_form.end_date.errors }}
+      </div>
 
-    <button type="submit" class="button button-primary">
-      Apply filters
-    </button>
-  </form>
+      <button type="submit" class="button button-primary">
+        Apply filters
+      </button>
+    </form>
 
-  {% if filter_form.non_field_errors %}
-    <div class="form-message error" role="alert">
-      {{ filter_form.non_field_errors }}
-    </div>
-  {% endif %}
-</section>
-
-<section
-  class="historical-coverage-card"
-  aria-labelledby="historical-coverage-title"
->
-  <div class="section-heading">
-    <div>
-      <p class="eyebrow">Coverage summary</p>
-      <h3 id="historical-coverage-title">
-        Stored historical classifications
-      </h3>
-    </div>
-
-    {% if coverage_summary.first_date %}
-      <p class="historical-coverage-period">
-        {{ coverage_summary.first_date|date:"Y-m-d" }}
-        to
-        {{ coverage_summary.last_date|date:"Y-m-d" }}
-      </p>
+    {% if filter_form.non_field_errors %}
+      <div class="form-message error" role="alert">
+        {{ filter_form.non_field_errors }}
+      </div>
     {% endif %}
-  </div>
+  </section>
 
-  <p class="historical-coverage-note">
-    Counts describe stored model classifications for the
-    selected historical period. They are not a new model
-    accuracy evaluation.
-  </p>
+  <section
+    class="historical-coverage-card"
+    aria-labelledby="historical-coverage-title"
+  >
+    <div class="section-heading">
+      <div>
+        <h3 id="historical-coverage-title">
+          Stored historical classifications
+        </h3>
+      </div>
 
-  <div class="historical-coverage-grid">
-    <article class="historical-summary-item">
-      <span>Total records</span>
-      <strong>
-        {{ coverage_summary.total_records }}
-      </strong>
-    </article>
-
-    <article class="historical-summary-item">
-      <span>Counties represented</span>
-      <strong>
-        {{ coverage_summary.counties_covered }}
-      </strong>
-    </article>
-
-    <article class="historical-summary-item risk-high">
-      <span>High risk</span>
-      <strong>
-        {{ coverage_summary.high_count }}
-      </strong>
-      <small>
-        {{ coverage_summary.high_percentage|floatformat:1 }}%
-      </small>
-    </article>
-
-    <article class="historical-summary-item risk-medium">
-      <span>Medium risk</span>
-      <strong>
-        {{ coverage_summary.medium_count }}
-      </strong>
-      <small>
-        {{ coverage_summary.medium_percentage|floatformat:1 }}%
-      </small>
-    </article>
-
-    <article class="historical-summary-item risk-low">
-      <span>Low risk</span>
-      <strong>
-        {{ coverage_summary.low_count }}
-      </strong>
-      <small>
-        {{ coverage_summary.low_percentage|floatformat:1 }}%
-      </small>
-    </article>
-  </div>
-</section>
-
-<section
-  class="historical-results-card"
-  aria-labelledby="historical-results-title"
->
-  <div class="section-heading">
-    <div>
-      <p class="eyebrow">Prediction history</p>
-      <h3 id="historical-results-title">
-        Historical records
-      </h3>
+      {% if coverage_summary.first_date %}
+        <p class="historical-coverage-period">
+          {{ coverage_summary.first_date|date:"Y-m-d" }}
+          to
+          {{ coverage_summary.last_date|date:"Y-m-d" }}
+        </p>
+      {% endif %}
     </div>
 
-    <p class="historical-result-count">
-      {{ result_count }}
-      record{{ result_count|pluralize }}
-    </p>
-  </div>
+    <dl class="historical-summary-list">
+      <div class="historical-summary-total">
+        <dd>{{ coverage_summary.total_records }}</dd>
+        <dt>Total records</dt>
+      </div>
 
-  {% if predictions %}
-    <div class="historical-table-wrapper">
-      <table class="historical-table">
-        <thead>
-          <tr>
-            <th scope="col">County</th>
-            <th scope="col">Observation date</th>
-            <th scope="col">Risk level</th>
-            <th scope="col">Low probability</th>
-            <th scope="col">Medium probability</th>
-            <th scope="col">High probability</th>
-          </tr>
-        </thead>
+      <div class="historical-summary-counties">
+        <dd>{{ coverage_summary.counties_covered }}</dd>
+        <dt>Counties represented</dt>
+      </div>
 
-        <tbody>
-          {% for prediction in predictions %}
-            <tr>
-              <td>
-                <strong>
-                  {{ prediction.observation.county.name }}
-                </strong>
-                <small>
-                  {{ prediction.observation.county.code }}
-                </small>
-              </td>
-              <td>
-                {{ prediction.observation.observation_date|date:"Y-m-d" }}
-              </td>
-              <td>
-                <span
-                  class="history-risk-badge risk-{{ prediction.risk_level|lower }}"
-                >
-                  {{ prediction.risk_level }}
-                </span>
-              </td>
-              <td>
-                {{ prediction.probability_low|floatformat:3 }}
-              </td>
-              <td>
-                {{ prediction.probability_medium|floatformat:3 }}
-              </td>
-              <td>
-                {{ prediction.probability_high|floatformat:3 }}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    {% if page_obj.paginator.num_pages > 1 %}
-      <nav
-        class="historical-pagination"
-        aria-label="Historical data pages"
-      >
-        {% if page_obj.has_previous %}
-          <a
-            href="?{% if download_query %}{{ download_query }}&{% endif %}page={{ page_obj.previous_page_number }}"
-          >
-            Previous
-          </a>
-        {% endif %}
-
+      <div class="risk-high">
+        <dd>{{ coverage_summary.high_count }}</dd>
+        <dt>High risk</dt>
         <span>
-          Page {{ page_obj.number }} of
-          {{ page_obj.paginator.num_pages }}
+          {{ coverage_summary.high_percentage|floatformat:1 }}%
         </span>
+      </div>
 
-        {% if page_obj.has_next %}
-          <a
-            href="?{% if download_query %}{{ download_query }}&{% endif %}page={{ page_obj.next_page_number }}"
-          >
-            Next
-          </a>
-        {% endif %}
-      </nav>
-    {% endif %}
-  {% else %}
-    <div class="historical-empty-state">
-      <h4>No historical records found</h4>
-      <p>
-        No real flood-risk predictions match the selected filters.
-        Import observations and generate predictions to populate
-        this page.
+      <div class="risk-medium">
+        <dd>{{ coverage_summary.medium_count }}</dd>
+        <dt>Medium risk</dt>
+        <span>
+          {{ coverage_summary.medium_percentage|floatformat:1 }}%
+        </span>
+      </div>
+
+      <div class="risk-low">
+        <dd>{{ coverage_summary.low_count }}</dd>
+        <dt>Low risk</dt>
+        <span>
+          {{ coverage_summary.low_percentage|floatformat:1 }}%
+        </span>
+      </div>
+    </dl>
+  </section>
+
+  <section
+    class="historical-results-card"
+    aria-labelledby="historical-results-title"
+  >
+    <div class="section-heading">
+      <div>
+        <h3 id="historical-results-title">
+          Historical records
+        </h3>
+      </div>
+
+      <p class="historical-result-count">
+        {{ result_count }}
+        record{{ result_count|pluralize }}
       </p>
     </div>
-  {% endif %}
+
+    {% if predictions %}
+      <div class="historical-table-wrapper">
+        <table class="historical-table">
+          <thead>
+            <tr>
+              <th scope="col">County</th>
+              <th scope="col">Observation date</th>
+              <th scope="col">Risk level</th>
+              <th scope="col">Low probability</th>
+              <th scope="col">Medium probability</th>
+              <th scope="col">High probability</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for prediction in predictions %}
+              <tr>
+                <td>
+                  <strong>
+                    {{ prediction.observation.county.name }}
+                  </strong>
+                  <small>
+                    County code
+                    {{ prediction.observation.county.code }}
+                  </small>
+                </td>
+
+                <td>
+                  {{ prediction.observation.observation_date|date:"Y-m-d" }}
+                </td>
+
+                <td>
+                  <span
+                    class="history-risk-badge risk-{{ prediction.risk_level|lower }}"
+                  >
+                    {{ prediction.risk_level }}
+                  </span>
+                </td>
+
+                <td>
+                  {{ prediction.probability_low|floatformat:3 }}
+                </td>
+
+                <td>
+                  {{ prediction.probability_medium|floatformat:3 }}
+                </td>
+
+                <td>
+                  {{ prediction.probability_high|floatformat:3 }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if page_obj.paginator.num_pages > 1 %}
+        <nav
+          class="historical-pagination"
+          aria-label="Historical data pages"
+        >
+          {% if page_obj.has_previous %}
+            <a
+              href="?{% if download_query %}{{ download_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}"
+            >
+              Previous
+            </a>
+          {% endif %}
+
+          <span>
+            Page {{ page_obj.number }} of
+            {{ page_obj.paginator.num_pages }}
+          </span>
+
+          {% if page_obj.has_next %}
+            <a
+              href="?{% if download_query %}{{ download_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}"
+            >
+              Next
+            </a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="historical-empty-state">
+        <h4>No historical records found</h4>
+        <p>
+          No stored predictions match the selected filters.
+          Adjust the filters and try again.
+        </p>
+      </div>
+    {% endif %}
+  </section>
 </section>
 {% endblock %}

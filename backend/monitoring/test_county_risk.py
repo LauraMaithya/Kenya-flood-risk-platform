@@ -236,29 +236,41 @@ class CountyRiskPageTests(TestCase):
         )
         self.assertContains(
             response,
+            "Environmental readings",
+        )
+        self.assertContains(
+            response,
             "Maximum precipitation",
         )
         self.assertContains(
             response,
-            "Mean temperature",
+            "Average temperature",
         )
         self.assertContains(
             response,
-            "Mean relative humidity",
+            "Relative humidity",
         )
         self.assertContains(
             response,
             "Mean soil wetness",
         )
-        self.assertContains(
+        self.assertNotContains(
             response,
             "Maximum soil wetness",
         )
         self.assertContains(
             response,
-            "Seasonal month sine",
+            "Prediction confidence",
         )
         self.assertContains(
+            response,
+            "Data and quality information",
+        )
+        self.assertNotContains(
+            response,
+            "Seasonal month sine",
+        )
+        self.assertNotContains(
             response,
             "Seasonal month cosine",
         )

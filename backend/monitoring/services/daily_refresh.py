@@ -1,14 +1,17 @@
 from dataclasses import dataclass
 
+from django.conf import settings
 from django.db import transaction
 
 from monitoring.models import (
+    AlertNotification,
     EnvironmentalObservation,
     FloodPrediction,
 )
 from monitoring.services.alert_service import (
     AlertServiceError,
     create_high_risk_alert,
+    deliver_email_alert,
 )
 from monitoring.services.observation_ingestion import (
     ObservationIngestionError,
@@ -132,13 +135,32 @@ def run_daily_refresh(
     alerts_created = 0
     alerts_existing = 0
 
-    if alert_channel and alert_recipient:
-        for prediction in high_predictions:
+    in_app_recipient = settings.IN_APP_ALERT_RECIPIENT
+    email_recipients = settings.ALERT_EMAIL_RECIPIENTS
+
+    if alert_channel == AlertNotification.Channel.IN_APP:
+        in_app_recipient = alert_recipient
+    elif alert_channel == AlertNotification.Channel.EMAIL:
+        email_recipients = [alert_recipient]
+
+    for prediction in high_predictions:
+        delivery_targets = [
+            (
+                AlertNotification.Channel.IN_APP,
+                in_app_recipient,
+            ),
+            *[
+                (AlertNotification.Channel.EMAIL, recipient)
+                for recipient in email_recipients
+            ],
+        ]
+
+        for channel, recipient in delivery_targets:
             try:
                 alert_result = create_high_risk_alert(
                     prediction,
-                    channel=alert_channel,
-                    recipient=alert_recipient,
+                    channel=channel,
+                    recipient=recipient,
                 )
             except AlertServiceError as exc:
                 raise DailyRefreshError(
@@ -152,6 +174,9 @@ def run_daily_refresh(
             alerts_existing += int(
                 not alert_result.created
             )
+
+            if channel == AlertNotification.Channel.EMAIL:
+                deliver_email_alert(alert_result.alert)
 
     return DailyRefreshSummary(
         observations_processed=ingestion.processed,

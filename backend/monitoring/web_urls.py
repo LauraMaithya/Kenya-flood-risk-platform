@@ -1,6 +1,7 @@
 from django.urls import path
 
 from monitoring.web_views import (
+    AlertAcknowledgeView,
     AlertsPageView,
     CountyRiskView,
     DashboardView,
@@ -51,6 +52,11 @@ urlpatterns = [
         "alerts/",
         AlertsPageView.as_view(),
         name="alerts",
+    ),
+    path(
+        "alerts/<int:pk>/acknowledge/",
+        AlertAcknowledgeView.as_view(),
+        name="alert-acknowledge",
     ),
     path(
         "profile/",

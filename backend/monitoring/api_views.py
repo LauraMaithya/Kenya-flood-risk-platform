@@ -410,7 +410,8 @@ class AlertNotificationListAPIView(ListAPIView):
                 "prediction__observation__county"
             )
             .filter(
-                prediction__observation__is_synthetic=False
+                prediction__observation__is_synthetic=False,
+                is_test=False,
             )
             .order_by("-created_at")
         )

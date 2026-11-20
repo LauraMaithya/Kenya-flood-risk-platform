@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase
+from django.test.utils import override_settings
 
 from monitoring.models import (
     AlertNotification,
@@ -9,12 +10,14 @@ from monitoring.models import (
     EnvironmentalObservation,
     FloodPrediction,
 )
-from monitoring.services.live_alerts import (
-    LiveAlertError,
-    create_live_high_risk_alerts,
+from monitoring.services.live_alerts import create_live_high_risk_alerts
+
+
+@override_settings(
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    ALERT_EMAIL_RECIPIENTS=["redcross@example.com"],
+    IN_APP_ALERT_RECIPIENT="platform-users",
 )
-
-
 class LiveAlertTests(TestCase):
     def setUp(self):
         self.observation_date = date(
@@ -152,9 +155,7 @@ class LiveAlertTests(TestCase):
 
     def test_only_real_live_high_prediction_is_alerted(self):
         summary = create_live_high_risk_alerts(
-            self.observation_date,
-            channel="IN_APP",
-            recipient="dashboard",
+            self.observation_date
         )
 
         self.assertEqual(
@@ -163,7 +164,7 @@ class LiveAlertTests(TestCase):
         )
         self.assertEqual(
             summary.alerts_created,
-            1,
+            2,
         )
         self.assertEqual(
             summary.alerts_existing,
@@ -171,14 +172,17 @@ class LiveAlertTests(TestCase):
         )
         self.assertEqual(
             AlertNotification.objects.count(),
-            1,
+            2,
         )
         self.assertEqual(
-            AlertNotification.objects.get().prediction,
-            self.live_high_prediction,
+            AlertNotification.objects.filter(
+                prediction=self.live_high_prediction
+            ).count(),
+            2,
         )
 
-    def test_alert_options_are_optional(self):
+    @override_settings(ALERT_EMAIL_RECIPIENTS=[])
+    def test_in_app_alert_is_created_without_email_configuration(self):
         summary = create_live_high_risk_alerts(
             self.observation_date
         )
@@ -189,38 +193,24 @@ class LiveAlertTests(TestCase):
         )
         self.assertEqual(
             summary.alerts_created,
-            0,
+            1,
         )
         self.assertEqual(
             AlertNotification.objects.count(),
-            0,
+            1,
         )
-
-    def test_alert_options_must_be_together(self):
-        with self.assertRaisesRegex(
-            LiveAlertError,
-            "must be provided together",
-        ):
-            create_live_high_risk_alerts(
-                self.observation_date,
-                channel="IN_APP",
-            )
 
     def test_repeated_alert_creation_is_idempotent(self):
         first = create_live_high_risk_alerts(
-            self.observation_date,
-            channel="IN_APP",
-            recipient="dashboard",
+            self.observation_date
         )
         second = create_live_high_risk_alerts(
-            self.observation_date,
-            channel="IN_APP",
-            recipient="dashboard",
+            self.observation_date
         )
 
         self.assertEqual(
             first.alerts_created,
-            1,
+            2,
         )
         self.assertEqual(
             second.alerts_created,
@@ -228,9 +218,9 @@ class LiveAlertTests(TestCase):
         )
         self.assertEqual(
             second.alerts_existing,
-            1,
+            2,
         )
         self.assertEqual(
             AlertNotification.objects.count(),
-            1,
+            2,
         )
