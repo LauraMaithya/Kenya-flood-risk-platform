@@ -93,6 +93,14 @@
       </span>
 
       <span class="sidebar-label">Alerts</span>
+      {% if unacknowledged_alert_count %}
+        <span
+          class="sidebar-alert-count"
+          aria-label="{{ unacknowledged_alert_count }} unacknowledged alerts"
+        >
+          {{ unacknowledged_alert_count }}
+        </span>
+      {% endif %}
     </a>
 
     <a

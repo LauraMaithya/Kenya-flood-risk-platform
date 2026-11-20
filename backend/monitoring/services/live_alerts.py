@@ -1,14 +1,16 @@
 from dataclasses import dataclass
 
-from django.db import transaction
+from django.conf import settings
 
 from monitoring.models import (
+    AlertNotification,
     EnvironmentalObservation,
     FloodPrediction,
 )
 from monitoring.services.alert_service import (
     AlertServiceError,
     create_high_risk_alert,
+    deliver_email_alert,
 )
 
 
@@ -22,30 +24,15 @@ class LiveAlertSummary:
     high_risk_predictions: int
     alerts_created: int
     alerts_existing: int
+    emails_sent: int
+    emails_failed: int
 
 
-def _validate_alert_options(
-    channel,
-    recipient,
-):
-    if (channel is None) != (recipient is None):
-        raise LiveAlertError(
-            "Alert channel and recipient must be provided together."
-        )
-
-
-@transaction.atomic
 def create_live_high_risk_alerts(
     observation_date,
     *,
-    channel=None,
-    recipient=None,
+    email_recipients=None,
 ):
-    _validate_alert_options(
-        channel,
-        recipient,
-    )
-
     predictions = list(
         FloodPrediction.objects.select_related(
             "observation__county"
@@ -65,18 +52,41 @@ def create_live_high_risk_alerts(
 
     alerts_created = 0
     alerts_existing = 0
+    emails_sent = 0
+    emails_failed = 0
+    recipients = (
+        settings.ALERT_EMAIL_RECIPIENTS
+        if email_recipients is None
+        else email_recipients
+    )
+    recipients = list(dict.fromkeys(recipients))
 
-    if channel is not None:
-        for prediction in predictions:
+    for prediction in predictions:
+        try:
+            result = create_high_risk_alert(
+                prediction,
+                channel=AlertNotification.Channel.IN_APP,
+                recipient=settings.IN_APP_ALERT_RECIPIENT,
+            )
+        except AlertServiceError as exc:
+            raise LiveAlertError(
+                "Live in-app alert creation failed for "
+                f"prediction {prediction.pk}: {exc}"
+            ) from exc
+
+        alerts_created += int(result.created)
+        alerts_existing += int(not result.created)
+
+        for recipient in recipients:
             try:
                 result = create_high_risk_alert(
                     prediction,
-                    channel=channel,
+                    channel=AlertNotification.Channel.EMAIL,
                     recipient=recipient,
                 )
             except AlertServiceError as exc:
                 raise LiveAlertError(
-                    "Live alert creation failed for "
+                    "Live email alert creation failed for "
                     f"prediction {prediction.pk}: {exc}"
                 ) from exc
 
@@ -87,6 +97,14 @@ def create_live_high_risk_alerts(
                 not result.created
             )
 
+            delivered = deliver_email_alert(result.alert)
+            emails_sent += int(
+                delivered.status == AlertNotification.Status.SENT
+            )
+            emails_failed += int(
+                delivered.status == AlertNotification.Status.FAILED
+            )
+
     return LiveAlertSummary(
         observation_date=observation_date,
         high_risk_predictions=len(
@@ -94,4 +112,6 @@ def create_live_high_risk_alerts(
         ),
         alerts_created=alerts_created,
         alerts_existing=alerts_existing,
+        emails_sent=emails_sent,
+        emails_failed=emails_failed,
     )

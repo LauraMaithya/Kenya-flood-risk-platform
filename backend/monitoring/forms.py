@@ -195,6 +195,14 @@ class AlertFilterForm(forms.Form):
             *AlertNotification.Status.choices,
         ],
     )
+    acknowledgement = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "All acknowledgement states"),
+            ("UNACKNOWLEDGED", "Unacknowledged"),
+            ("ACKNOWLEDGED", "Acknowledged"),
+        ],
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

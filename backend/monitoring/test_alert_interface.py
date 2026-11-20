@@ -59,6 +59,8 @@ class AlertInterfaceTests(TestCase):
         is_synthetic=False,
         recipient=None,
         failure_reason="",
+        is_test=False,
+        acknowledged_by=None,
     ):
         observation = EnvironmentalObservation.objects.create(
             county=county,
@@ -104,6 +106,13 @@ class AlertInterfaceTests(TestCase):
             ),
             status=status,
             failure_reason=failure_reason,
+            is_test=is_test,
+            acknowledged_at=(
+                timezone.now()
+                if acknowledged_by is not None
+                else None
+            ),
+            acknowledged_by=acknowledged_by,
             sent_at=sent_at,
         )
 
@@ -151,6 +160,11 @@ class AlertInterfaceTests(TestCase):
             observation_date=date(2025, 1, 4),
             is_synthetic=True,
         )
+        self.create_alert(
+            county=self.mombasa,
+            observation_date=date(2025, 1, 5),
+            is_test=True,
+        )
         self.authenticate()
 
         response = self.client.get(self.url)
@@ -171,6 +185,69 @@ class AlertInterfaceTests(TestCase):
             response.context["failed_alert_count"],
             1,
         )
+
+    def test_sidebar_shows_only_unacknowledged_operational_count(self):
+        self.create_alert(
+            county=self.nairobi,
+            observation_date=date(2025, 1, 6),
+        )
+        self.create_alert(
+            county=self.nairobi,
+            observation_date=date(2025, 1, 7),
+            acknowledged_by=self.user,
+        )
+        self.create_alert(
+            county=self.nairobi,
+            observation_date=date(2025, 1, 8),
+            is_test=True,
+        )
+        self.authenticate()
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(
+            response.context["unacknowledged_alert_count"],
+            1,
+        )
+        self.assertContains(response, "1 unacknowledged alerts")
+
+    def test_operator_can_acknowledge_in_app_alert(self):
+        alert = self.create_alert(
+            county=self.nairobi,
+            observation_date=date(2025, 1, 9),
+        )
+        self.authenticate()
+
+        response = self.client.post(
+            reverse(
+                "monitoring-web:alert-acknowledge",
+                kwargs={"pk": alert.pk},
+            )
+        )
+
+        alert.refresh_from_db()
+        self.assertRedirects(response, self.url)
+        self.assertIsNotNone(alert.acknowledged_at)
+        self.assertEqual(alert.acknowledged_by, self.user)
+
+    def test_email_alert_cannot_be_acknowledged(self):
+        alert = self.create_alert(
+            county=self.nairobi,
+            observation_date=date(2025, 1, 10),
+            channel=AlertNotification.Channel.EMAIL,
+            recipient="stakeholder@example.com",
+        )
+        self.authenticate()
+
+        self.client.post(
+            reverse(
+                "monitoring-web:alert-acknowledge",
+                kwargs={"pk": alert.pk},
+            )
+        )
+
+        alert.refresh_from_db()
+        self.assertIsNone(alert.acknowledged_at)
 
     def test_county_channel_and_status_filters_are_applied(self):
         matching = self.create_alert(

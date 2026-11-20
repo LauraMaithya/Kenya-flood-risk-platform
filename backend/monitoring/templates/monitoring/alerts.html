@@ -2,6 +2,16 @@
 
 {% block content %}
 <section class="alerts-page">
+  {% if messages %}
+    <div class="alert-page-messages" aria-live="polite">
+      {% for message in messages %}
+        <p data-level="{{ message.tags|default:'info' }}">
+          {{ message }}
+        </p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
   <header class="alerts-introduction">
     <h2>Alert monitoring</h2>
 
@@ -78,6 +88,14 @@
         {{ filter_form.status.errors }}
       </div>
 
+      <div class="alert-filter-field">
+        <label for="{{ filter_form.acknowledgement.id_for_label }}">
+          Acknowledgement
+        </label>
+        {{ filter_form.acknowledgement }}
+        {{ filter_form.acknowledgement.errors }}
+      </div>
+
       <button class="primary-button" type="submit">
         Apply filters
       </button>
@@ -108,6 +126,7 @@
               <th scope="col">Status</th>
               <th scope="col">Message</th>
               <th scope="col">Created</th>
+              <th scope="col">Acknowledgement</th>
             </tr>
           </thead>
 
@@ -126,6 +145,9 @@
 
                 <td>
                   {{ alert.get_channel_display }}
+                  {% if alert.is_test %}
+                    <span class="alert-test-badge">Test</span>
+                  {% endif %}
                 </td>
 
                 <td>{{ alert.recipient }}</td>
@@ -158,6 +180,36 @@
                     <small class="alert-sent-time">
                       Sent {{ alert.sent_at|date:"d M Y, H:i" }}
                     </small>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if alert.channel == "IN_APP" %}
+                    {% if alert.is_test %}
+                      <span class="alert-acknowledged-copy">
+                        Test notification
+                      </span>
+                    {% elif alert.acknowledged_at %}
+                      <span class="alert-acknowledged-copy">
+                        Acknowledged by
+                        {{ alert.acknowledged_by.username|default:"a user" }}
+                        <time datetime="{{ alert.acknowledged_at|date:'c' }}">
+                          {{ alert.acknowledged_at|date:"d M Y, H:i" }}
+                        </time>
+                      </span>
+                    {% else %}
+                      <form
+                        method="post"
+                        action="{% url 'monitoring-web:alert-acknowledge' alert.pk %}"
+                      >
+                        {% csrf_token %}
+                        <button class="alert-acknowledge-button" type="submit">
+                          Acknowledge
+                        </button>
+                      </form>
+                    {% endif %}
+                  {% else %}
+                    <span aria-label="Not applicable">—</span>
                   {% endif %}
                 </td>
               </tr>

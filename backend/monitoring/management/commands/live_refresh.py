@@ -113,9 +113,10 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--alert-channel",
+            choices=["IN_APP", "EMAIL"],
             help=(
-                "Optional alert channel, such as EMAIL or SMS. "
-                "Must be supplied with --alert-recipient."
+                "Optional compatibility override. EMAIL uses the "
+                "supplied recipient; in-app alerts are always created."
             ),
         )
         parser.add_argument(
@@ -240,8 +241,11 @@ class Command(BaseCommand):
                 alert_summary = (
                     create_live_high_risk_alerts(
                         observation_date,
-                        channel=alert_channel,
-                        recipient=alert_recipient,
+                        email_recipients=(
+                            [alert_recipient]
+                            if alert_channel == "EMAIL"
+                            else None
+                        ),
                     )
                 )
             except LiveAlertError as exc:
@@ -254,7 +258,9 @@ class Command(BaseCommand):
                 f"{alert_summary.high_risk_predictions} "
                 "eligible High-risk predictions, "
                 f"{alert_summary.alerts_created} alerts created, "
-                f"{alert_summary.alerts_existing} alerts existing."
+                f"{alert_summary.alerts_existing} alerts existing, "
+                f"{alert_summary.emails_sent} emails sent, "
+                f"{alert_summary.emails_failed} emails failed."
             )
 
         mode = (

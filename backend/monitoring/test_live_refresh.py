@@ -45,6 +45,8 @@ class LiveRefreshCommandTests(SimpleTestCase):
                 high_risk_predictions=2,
                 alerts_created=2,
                 alerts_existing=0,
+                emails_sent=1,
+                emails_failed=0,
             )
         )
 
@@ -135,8 +137,7 @@ class LiveRefreshCommandTests(SimpleTestCase):
 
         mocked_create_alerts.assert_called_once_with(
             self.run_date,
-            channel="EMAIL",
-            recipient="alerts@example.com",
+            email_recipients=["alerts@example.com"],
         )
 
         self.assertIn(

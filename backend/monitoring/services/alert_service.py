@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.db import transaction
 from django.utils import timezone
@@ -62,6 +64,7 @@ def create_high_risk_alert(
     *,
     channel,
     recipient,
+    is_test=False,
 ):
     if prediction.pk is None:
         raise AlertServiceError(
@@ -71,6 +74,11 @@ def create_high_risk_alert(
     if prediction.risk_level != "High":
         raise AlertServiceError(
             "Alerts are created only for High-risk predictions."
+        )
+
+    if prediction.observation.is_synthetic and not is_test:
+        raise AlertServiceError(
+            "Operational alerts cannot use synthetic observations."
         )
 
     recipient = _validate_channel_and_recipient(
@@ -83,11 +91,20 @@ def create_high_risk_alert(
         prediction=prediction,
         channel=channel,
         recipient=recipient,
+        is_test=is_test,
         defaults={
             "message": message,
-            "status": "PENDING",
+            "status": (
+                AlertNotification.Status.SENT
+                if channel == AlertNotification.Channel.IN_APP
+                else AlertNotification.Status.PENDING
+            ),
             "failure_reason": "",
-            "sent_at": None,
+            "sent_at": (
+                timezone.now()
+                if channel == AlertNotification.Channel.IN_APP
+                else None
+            ),
         },
     )
 
@@ -105,6 +122,70 @@ def create_high_risk_alert(
         ) from exc
 
     return AlertCreation(alert=alert, created=created)
+
+
+def deliver_email_alert(alert):
+    if alert.channel != AlertNotification.Channel.EMAIL:
+        raise AlertServiceError(
+            "Only Email alerts can be delivered by email."
+        )
+
+    if alert.status == AlertNotification.Status.SENT:
+        return alert
+
+    county = alert.prediction.observation.county.name
+    subject_prefix = "[TEST] " if alert.is_test else ""
+
+    try:
+        delivered = send_mail(
+            subject=(
+                f"{subject_prefix}Kenya Flood Risk Alert: {county}"
+            ),
+            message=alert.message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[alert.recipient],
+            fail_silently=False,
+        )
+    except Exception as exc:
+        failure_reason = str(exc).strip() or exc.__class__.__name__
+        return mark_alert_failed(alert, failure_reason)
+
+    if delivered != 1:
+        return mark_alert_failed(
+            alert,
+            "The email backend did not confirm delivery.",
+        )
+
+    return mark_alert_sent(alert)
+
+
+@transaction.atomic
+def acknowledge_alert(alert, user):
+    if alert.channel != AlertNotification.Channel.IN_APP:
+        raise AlertServiceError(
+            "Only in-app alerts can be acknowledged."
+        )
+
+    if not getattr(user, "is_authenticated", False) or user.pk is None:
+        raise AlertServiceError(
+            "An authenticated user is required."
+        )
+
+    locked_alert = AlertNotification.objects.select_for_update().get(
+        pk=alert.pk
+    )
+
+    if locked_alert.acknowledged_at is None:
+        locked_alert.acknowledged_at = timezone.now()
+        locked_alert.acknowledged_by = user
+        locked_alert.save(
+            update_fields=[
+                "acknowledged_at",
+                "acknowledged_by",
+            ]
+        )
+
+    return locked_alert
 
 
 @transaction.atomic

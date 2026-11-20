@@ -2125,6 +2125,25 @@ select:focus-visible {
   gap: 1.35rem;
 }
 
+.alert-page-messages {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.alert-page-messages p {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid var(--teal);
+  color: var(--navy-deep);
+  background: rgba(47, 107, 79, 0.09);
+  font-size: 0.82rem;
+}
+
+.alert-page-messages p[data-level="error"] {
+  border-left-color: #a3312d;
+  background: rgba(177, 65, 55, 0.09);
+}
+
 .alerts-introduction {
   display: flex;
   align-items: flex-end;
@@ -2311,7 +2330,7 @@ select:focus-visible {
   display: grid;
   grid-template-columns:
     minmax(190px, 1.3fr)
-    repeat(2, minmax(150px, 1fr))
+    repeat(3, minmax(150px, 1fr))
     auto;
   align-items: end;
   gap: 0.85rem;
@@ -2392,7 +2411,7 @@ select:focus-visible {
 
 .alert-table {
   width: 100%;
-  min-width: 980px;
+  min-width: 1120px;
   border-collapse: collapse;
 }
 
@@ -2477,6 +2496,54 @@ select:focus-visible {
   color: var(--muted);
   font-size: 0.68rem;
   line-height: 1.4;
+}
+
+.alert-test-badge,
+.sidebar-alert-count {
+  display: inline-grid;
+  min-width: 1.45rem;
+  min-height: 1.45rem;
+  place-items: center;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #a3312d;
+  font-size: 0.65rem;
+  font-weight: 750;
+}
+
+.alert-test-badge {
+  margin-left: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  background: #347fa3;
+  text-transform: uppercase;
+}
+
+.sidebar-alert-count {
+  margin-left: auto;
+}
+
+.alert-acknowledge-button {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--teal);
+  border-radius: 7px;
+  color: var(--teal);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.alert-acknowledge-button:hover {
+  color: #ffffff;
+  background: var(--teal);
+}
+
+.alert-acknowledged-copy {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
 .alert-failure-reason {

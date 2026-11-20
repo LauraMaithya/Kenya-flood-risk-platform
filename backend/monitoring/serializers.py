@@ -138,6 +138,8 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
             "channel",
             "message",
             "status",
+            "is_test",
+            "acknowledged_at",
             "created_at",
             "sent_at",
         )

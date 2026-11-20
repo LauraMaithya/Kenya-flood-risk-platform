@@ -183,7 +183,7 @@ class DailyRefreshTests(TestCase):
         )
         self.assertEqual(
             AlertNotification.objects.count(),
-            0,
+            1,
         )
 
         prediction = FloodPrediction.objects.get()
@@ -225,7 +225,7 @@ class DailyRefreshTests(TestCase):
 
         self.assertEqual(
             alert.status,
-            "PENDING",
+            "SENT",
         )
         self.assertEqual(
             alert.channel,

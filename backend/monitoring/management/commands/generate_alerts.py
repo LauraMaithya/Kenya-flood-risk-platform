@@ -11,7 +11,10 @@ from monitoring.services.alert_service import (
 
 
 class Command(BaseCommand):
-    help = "Create pending alerts for High-risk predictions."
+    help = (
+        "Create alerts for genuine High-risk predictions. Email "
+        "records remain pending until delivered."
+    )
 
     def add_arguments(self, parser):
         selection = parser.add_mutually_exclusive_group(
@@ -53,6 +56,7 @@ class Command(BaseCommand):
                     ).get(
                         pk=prediction_id,
                         risk_level="High",
+                        observation__is_synthetic=False,
                     )
                 ]
             except FloodPrediction.DoesNotExist as exc:
@@ -72,7 +76,10 @@ class Command(BaseCommand):
                 FloodPrediction.objects.select_related(
                     "observation__county"
                 )
-                .filter(risk_level="High")
+                .filter(
+                    risk_level="High",
+                    observation__is_synthetic=False,
+                )
                 .exclude(pk__in=existing_prediction_ids)
                 .order_by(
                     "observation__observation_date",
