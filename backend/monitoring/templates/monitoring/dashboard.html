@@ -29,6 +29,14 @@
       aria-label="Interactive Kenya county flood-risk heatmap"
     ></div>
 
+    {% if outlook_label %}
+    <section class="map-kpi-strip" aria-label="Outlook status">
+      <article class="map-kpi">
+        <strong>{{ outlook_label }} outlook</strong>
+        <span>No validated outlook available for this month.</span>
+      </article>
+    </section>
+    {% else %}
     <section
       class="map-kpi-strip"
       aria-label="Flood-risk totals for selected period"
@@ -58,6 +66,7 @@
       </article>
     </section>
 
+    {% endif %}
     <div class="map-county-overlay">
       <label
         for="county-selector"
@@ -142,6 +151,7 @@
       class="map-floating-legend"
       aria-label="Flood-risk legend"
     >
+      {% if not outlook_label %}
       <li>
         <span class="legend-dot high"></span>
         High
@@ -154,6 +164,7 @@
         <span class="legend-dot low"></span>
         Low
       </li>
+      {% endif %}
       <li>
         <span class="legend-dot unavailable"></span>
         No data
@@ -182,6 +193,16 @@
         {{ period_form.month }}
       </div>
 
+      <div class="timeline-field">
+        <label for="outlook-month">Outlook month</label>
+        <select id="outlook-month" name="outlook">
+          <option value="">Daily data</option>
+          {% for value, label in outlook_options.items %}
+            <option value="{{ value }}"{% if value == outlook_month %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
       <button
         type="submit"
         class="timeline-apply"
@@ -189,7 +210,7 @@
         View
       </button>
 
-      {% if selected_year or selected_month %}
+      {% if outlook_label or selected_year or selected_month %}
         <a
           href="{% url 'monitoring-web:dashboard' %}"
           class="timeline-latest"

@@ -133,6 +133,8 @@ class DashboardMapAPIView(APIView):
         latest_prediction = real_predictions.filter(
             observation__county_id=OuterRef("pk")
         )
+        if request.query_params.get("outlook") == "1":
+            latest_prediction = latest_prediction.none()
 
         if year is not None:
             latest_prediction = latest_prediction.filter(

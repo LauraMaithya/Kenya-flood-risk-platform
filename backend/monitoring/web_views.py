@@ -5,6 +5,7 @@ from django.db.models import Count, Max, OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.timezone import localdate
 from django.views import View
 from django.views.generic import TemplateView
 import calendar
@@ -157,6 +158,17 @@ class DashboardView(ProtectedPageView):
             else None
         )
         period_form = DashboardPeriodForm(form_data)
+        today = localdate()
+        outlook_options = {}
+        for offset in range(1, 4):
+            year, month_index = divmod(
+                today.year * 12 + today.month - 1 + offset, 12
+            )
+            outlook_options[f"{year:04d}-{month_index + 1:02d}"] = (
+                f"{calendar.month_name[month_index + 1]} {year}"
+            )
+        outlook_month = self.request.GET.get("outlook", "")
+        outlook_label = outlook_options.get(outlook_month)
 
         selected_year = None
         selected_month = None
@@ -176,12 +188,13 @@ class DashboardView(ProtectedPageView):
                 f"{selected_year}"
             )
 
-        context.update(
-            latest_prediction_summary(
-                year=selected_year,
-                month=selected_month,
+        if not outlook_label:
+            context.update(
+                latest_prediction_summary(
+                    year=selected_year,
+                    month=selected_month,
+                )
             )
-        )
 
         query_parameters = {}
 
@@ -191,9 +204,16 @@ class DashboardView(ProtectedPageView):
         if selected_month is not None:
             query_parameters["month"] = selected_month
 
+        if outlook_label:
+            year, month = outlook_month.split("-")
+            query_parameters = {"year": year, "month": month, "outlook": "1"}
+
         context.update(
             {
                 "period_form": period_form,
+                "outlook_options": outlook_options,
+                "outlook_month": outlook_month,
+                "outlook_label": outlook_label,
                 "selected_year": selected_year,
                 "selected_month": selected_month,
                 "selected_period_label": selected_period_label,
