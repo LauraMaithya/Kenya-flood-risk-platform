@@ -738,3 +738,90 @@ class AlertNotification(models.Model):
             f"{self.prediction.observation.county.name} — "
             f"{self.channel} — {self.status}"
         )
+
+
+class MonthlyOutlookAdvisory(models.Model):
+    """Advance advisory created from an accepted monthly outlook release."""
+
+    county = models.ForeignKey(
+        County,
+        on_delete=models.PROTECT,
+        related_name="monthly_outlook_advisories",
+    )
+    target_month = models.DateField()
+    issued_on = models.DateField()
+    probability_high = models.DecimalField(
+        max_digits=7,
+        decimal_places=6,
+    )
+    channel = models.CharField(
+        max_length=20,
+        choices=AlertNotification.Channel.choices,
+    )
+    recipient = models.CharField(max_length=255)
+    message = models.TextField()
+    status = models.CharField(
+        max_length=20,
+        choices=AlertNotification.Status.choices,
+        default=AlertNotification.Status.PENDING,
+    )
+    failure_reason = models.TextField(blank=True, default="")
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    acknowledged_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acknowledged_monthly_outlook_advisories",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-issued_on", "target_month", "county__name"]
+        indexes = [
+            models.Index(
+                fields=["status", "created_at"],
+                name="outlook_adv_status_idx",
+            ),
+            models.Index(
+                fields=["target_month", "county"],
+                name="outlook_adv_target_idx",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "county",
+                    "target_month",
+                    "issued_on",
+                    "channel",
+                    "recipient",
+                ],
+                name="unique_monthly_outlook_advisory",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(probability_high__gte=Decimal("0"))
+                    & models.Q(probability_high__lte=Decimal("1"))
+                ),
+                name="outlook_advisory_probability_range",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(status=AlertNotification.Status.SENT)
+                    | models.Q(sent_at__isnull=False)
+                ),
+                name="sent_outlook_advisory_timestamp",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.county.name} — {self.target_month:%B %Y} — "
+            f"{self.channel} — {self.status}"
+        )
+
+    @property
+    def probability_percent(self):
+        return self.probability_high * Decimal("100")

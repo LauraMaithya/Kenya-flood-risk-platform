@@ -8,6 +8,7 @@ from monitoring.web_views import (
     HistoricalDataDownloadView,
     HistoricalDataView,
     LoginPageView,
+    OutlookAdvisoryAcknowledgeView,
     ProfilePageView,
     RegisterPageView,
     RootRedirectView,
@@ -57,6 +58,11 @@ urlpatterns = [
         "alerts/<int:pk>/acknowledge/",
         AlertAcknowledgeView.as_view(),
         name="alert-acknowledge",
+    ),
+    path(
+        "alerts/outlook/<int:pk>/acknowledge/",
+        OutlookAdvisoryAcknowledgeView.as_view(),
+        name="outlook-advisory-acknowledge",
     ),
     path(
         "profile/",

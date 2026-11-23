@@ -18,6 +18,7 @@ NASA_POWER_PARAMETERS = (
     "GWETROOT",
 )
 NASA_POWER_MISSING_VALUE = Decimal("-999")
+NASA_POWER_PRECIPITATION_UNITS = "mm/day"
 
 
 class NasaPowerError(RuntimeError):
@@ -143,6 +144,22 @@ def _validate_ranges(record):
 
 
 def parse_nasa_power_response(payload):
+    try:
+        precipitation_units = payload["parameters"][
+            "PRECTOTCORR"
+        ]["units"]
+    except (KeyError, TypeError) as exc:
+        raise NasaPowerError(
+            "NASA POWER response is missing PRECTOTCORR unit metadata."
+        ) from exc
+
+    if precipitation_units != NASA_POWER_PRECIPITATION_UNITS:
+        raise NasaPowerError(
+            "NASA POWER PRECTOTCORR units changed from "
+            f"{NASA_POWER_PRECIPITATION_UNITS} to "
+            f"{precipitation_units}. Refusing an unsafe conversion."
+        )
+
     try:
         parameters = payload["properties"]["parameter"]
         parameter_values = {

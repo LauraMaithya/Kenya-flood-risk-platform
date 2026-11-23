@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from django.test import TestCase
 from django.test.utils import override_settings
+from django.core.management import call_command
+from io import StringIO
 
 from monitoring.models import (
     AlertNotification,
@@ -224,3 +226,18 @@ class LiveAlertTests(TestCase):
             AlertNotification.objects.count(),
             2,
         )
+
+    def test_reconcile_command_backfills_missing_live_alerts(self):
+        output = StringIO()
+        call_command(
+            "reconcile_live_alerts",
+            days=90,
+            stdout=output,
+        )
+        self.assertEqual(
+            AlertNotification.objects.filter(
+                prediction=self.live_high_prediction
+            ).count(),
+            2,
+        )
+        self.assertIn("2 alerts created", output.getvalue())

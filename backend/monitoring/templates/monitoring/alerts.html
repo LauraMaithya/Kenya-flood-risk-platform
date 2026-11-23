@@ -102,6 +102,86 @@
     </form>
   </section>
 
+  {% if outlook_advisories %}
+    <section class="alert-results-card outlook-advisory-results">
+      <div class="section-heading">
+        <div>
+          <h3>Months-ahead outlook advisories</h3>
+          <p>
+            Advance planning notices from the accepted monthly flood outlook.
+            These are not live flood warnings.
+          </p>
+        </div>
+        <p class="alert-result-count">
+          {{ outlook_advisory_count }}
+          advisor{{ outlook_advisory_count|pluralize:"y,ies" }}
+        </p>
+      </div>
+
+      <div class="alert-table-wrapper">
+        <table class="alert-table">
+          <thead>
+            <tr>
+              <th scope="col">County</th>
+              <th scope="col">Target month</th>
+              <th scope="col">Estimated likelihood</th>
+              <th scope="col">Channel</th>
+              <th scope="col">Status</th>
+              <th scope="col">Message</th>
+              <th scope="col">Issued</th>
+              <th scope="col">Acknowledgement</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for advisory in outlook_advisories %}
+              <tr data-alert-status="{{ advisory.status }}">
+                <td><strong>{{ advisory.county.name }}</strong></td>
+                <td>{{ advisory.target_month|date:"F Y" }}</td>
+                <td>{{ advisory.probability_percent|floatformat:1 }}%</td>
+                <td>{{ advisory.get_channel_display }}</td>
+                <td>
+                  <span class="alert-status-badge" data-status="{{ advisory.status }}">
+                    {{ advisory.get_status_display }}
+                  </span>
+                  {% if advisory.status == "FAILED" %}
+                    <small class="alert-failure-reason">
+                      {{ advisory.failure_reason }}
+                    </small>
+                  {% endif %}
+                </td>
+                <td class="alert-message">{{ advisory.message }}</td>
+                <td>
+                  <time datetime="{{ advisory.issued_on|date:'Y-m-d' }}">
+                    {{ advisory.issued_on|date:"d M Y" }}
+                  </time>
+                </td>
+                <td>
+                  {% if advisory.channel == "IN_APP" %}
+                    {% if advisory.acknowledged_at %}
+                      <span class="alert-acknowledged-copy">
+                        Acknowledged by
+                        {{ advisory.acknowledged_by.username|default:"a user" }}
+                      </span>
+                    {% else %}
+                      <form method="post" action="{% url 'monitoring-web:outlook-advisory-acknowledge' advisory.pk %}">
+                        {% csrf_token %}
+                        <button class="alert-acknowledge-button" type="submit">
+                          Acknowledge
+                        </button>
+                      </form>
+                    {% endif %}
+                  {% else %}
+                    <span aria-label="Not applicable">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
   <section class="alert-results-card">
     {% if alerts %}
       <div class="section-heading">
@@ -247,7 +327,7 @@
       {% endif %}
     {% else %}
       <p class="alert-empty-state">
-        No alerts found
+        No alerts found in daily monitoring
       </p>
     {% endif %}
   </section>

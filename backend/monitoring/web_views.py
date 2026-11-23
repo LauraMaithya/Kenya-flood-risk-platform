@@ -10,7 +10,12 @@ from django.views import View
 from django.views.generic import TemplateView
 import calendar
 from urllib.parse import urlencode
-from monitoring.models import AlertNotification, County, FloodPrediction
+from monitoring.models import (
+    AlertNotification,
+    County,
+    FloodPrediction,
+    MonthlyOutlookAdvisory,
+)
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from monitoring.forms import (
@@ -25,16 +30,22 @@ from monitoring.services.historical_data import (
 )
 from monitoring.services.alert_history import (
     alert_notification_queryset,
-    alert_status_summary,
+    combined_alert_status_summary,
+    outlook_advisory_queryset,
 )
 from monitoring.services.alert_service import (
     AlertServiceError,
     acknowledge_alert,
 )
+from monitoring.services.outlook_advisories import (
+    OutlookAdvisoryError,
+    acknowledge_outlook_advisory,
+)
 from monitoring.services.county_risk import (
     latest_county_prediction,
     recent_county_predictions,
 )
+from monitoring.services.monthly_outlook import available_outlook_months
 
 class RootRedirectView(View):
     def get(self, request):
@@ -160,13 +171,20 @@ class DashboardView(ProtectedPageView):
         period_form = DashboardPeriodForm(form_data)
         today = localdate()
         outlook_options = {}
-        for offset in range(1, 4):
-            year, month_index = divmod(
-                today.year * 12 + today.month - 1 + offset, 12
-            )
-            outlook_options[f"{year:04d}-{month_index + 1:02d}"] = (
-                f"{calendar.month_name[month_index + 1]} {year}"
-            )
+        published_months = available_outlook_months()
+        if not published_months:
+            published_months = []
+            for offset in range(1, 4):
+                year, month_index = divmod(
+                    today.year * 12 + today.month - 1 + offset,
+                    12,
+                )
+                published_months.append(
+                    f"{year:04d}-{month_index + 1:02d}"
+                )
+        for value in published_months:
+            year, month = (int(part) for part in value.split("-", 1))
+            outlook_options[value] = f"{calendar.month_name[month]} {year}"
         outlook_month = self.request.GET.get("outlook", "")
         outlook_label = outlook_options.get(outlook_month)
 
@@ -407,10 +425,16 @@ class AlertsPageView(ProtectedPageView):
             alerts = alert_notification_queryset(
                 form.cleaned_data
             )
+            outlook_advisories = outlook_advisory_queryset(
+                form.cleaned_data
+            )
         else:
             alerts = alert_notification_queryset().none()
+            outlook_advisories = outlook_advisory_queryset().none()
 
-        summary = alert_status_summary(alerts)
+        summary = combined_alert_status_summary(
+            alerts, outlook_advisories
+        )
         paginator = Paginator(alerts, self.paginate_by)
         page_obj = paginator.get_page(
             self.request.GET.get("page")
@@ -423,6 +447,8 @@ class AlertsPageView(ProtectedPageView):
             {
                 "filter_form": form,
                 "alerts": page_obj.object_list,
+                "outlook_advisories": outlook_advisories[:50],
+                "outlook_advisory_count": outlook_advisories.count(),
                 "page_obj": page_obj,
                 "result_count": paginator.count,
                 "pagination_query": (
@@ -452,6 +478,21 @@ class AlertAcknowledgeView(LoginRequiredMixin, View):
         else:
             messages.success(request, "Alert acknowledged.")
 
+        return redirect("monitoring-web:alerts")
+
+
+class OutlookAdvisoryAcknowledgeView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        advisory = get_object_or_404(
+            MonthlyOutlookAdvisory,
+            pk=pk,
+        )
+        try:
+            acknowledge_outlook_advisory(advisory, request.user)
+        except OutlookAdvisoryError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Outlook advisory acknowledged.")
         return redirect("monitoring-web:alerts")
 
 

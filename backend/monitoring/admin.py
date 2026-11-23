@@ -5,6 +5,7 @@ from .models import (
     County,
     EnvironmentalObservation,
     FloodPrediction,
+    MonthlyOutlookAdvisory,
 )
 
 
@@ -99,3 +100,25 @@ class AlertNotificationAdmin(admin.ModelAdmin):
         "prediction__observation__county",
         "acknowledged_by",
     )
+
+
+@admin.register(MonthlyOutlookAdvisory)
+class MonthlyOutlookAdvisoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "county",
+        "target_month",
+        "issued_on",
+        "probability_high",
+        "channel",
+        "recipient",
+        "status",
+        "acknowledged_at",
+    )
+    list_filter = (
+        "target_month",
+        "channel",
+        "status",
+        "acknowledged_at",
+    )
+    search_fields = ("county__name", "recipient", "message")
+    list_select_related = ("county", "acknowledged_by")
