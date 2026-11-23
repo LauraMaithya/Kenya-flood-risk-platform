@@ -492,6 +492,10 @@ class DashboardMapAPITests(APITestCase):
             "monitoring/js/risk_map.js",
         )
         self.assertContains(
+            response,
+            "monitoring/css/egyptian-stone-palette.css",
+        )
+        self.assertContains(
         response,
         "monitoring/data/kenya_adm1.geojson",
         )

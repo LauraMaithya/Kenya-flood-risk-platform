@@ -98,6 +98,10 @@ class DashboardPageTests(TestCase):
             response,
             "monitoring/login.html",
         )
+        self.assertContains(
+            response,
+            "monitoring/css/egyptian-stone-palette.css",
+        )
 
     def test_registration_page_is_available_anonymously(self):
         response = self.client.get(
@@ -108,6 +112,10 @@ class DashboardPageTests(TestCase):
         self.assertTemplateUsed(
             response,
             "monitoring/register.html",
+        )
+        self.assertContains(
+            response,
+            "monitoring/css/egyptian-stone-palette.css",
         )
 
     def test_anonymous_root_redirects_to_login(self):
@@ -287,6 +295,28 @@ class DashboardPageTests(TestCase):
                 )
 
                 self.assertEqual(response.status_code, 200)
+
+    def test_authenticated_layout_contains_grouped_sidebar_navigation(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("monitoring-web:dashboard")
+        )
+
+        self.assertContains(response, 'id="primary-navigation"')
+        self.assertContains(response, "Monitoring")
+        self.assertContains(response, "Account")
+        self.assertContains(response, "Kenya Flood Risk")
+
+    def test_profile_uses_flood_mark_instead_of_initialism(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("monitoring-web:profile")
+        )
+
+        self.assertContains(response, "profile-details-mark")
+        self.assertNotContains(response, ">\n          KFR\n")
 
     def test_existing_authentication_api_routes_remain_resolvable(self):
         expected_paths = {
