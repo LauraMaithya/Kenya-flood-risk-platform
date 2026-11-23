@@ -12,3 +12,7 @@ scikit-learn==1.6.1
 joblib==1.6.0
 djangorestframework==3.18.1
 certifi==2026.10.23
+cdsapi==0.7.7
+netCDF4==1.7.3
+xarray==2025.10.1
+eccodes==2.50.1

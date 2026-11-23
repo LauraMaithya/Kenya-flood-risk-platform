@@ -1,4 +1,10 @@
 import calendar
+from monitoring.services.monthly_outlook import (
+    load_outlook_release,
+    load_rolling_outlook,
+    load_rolling_outlook_details,
+    seasonal_outlook,
+)
 from datetime import date
 
 from django.db.models import OuterRef, Subquery
@@ -133,6 +139,16 @@ class DashboardMapAPIView(APIView):
         latest_prediction = real_predictions.filter(
             observation__county_id=OuterRef("pk")
         )
+        is_outlook = request.query_params.get("outlook") == "1"
+        outlook_release = load_outlook_release(year, month) if is_outlook else {}
+        rolling_scores, rolling_basis = load_rolling_outlook(year, month) if is_outlook else ({}, None)
+        rolling_details = (
+            load_rolling_outlook_details(year, month) if is_outlook else {}
+        )
+        if is_outlook and month is None:
+            raise ValidationError({"month": "Select an outlook month."})
+        if is_outlook:
+            latest_prediction = latest_prediction.none()
 
         if year is not None:
             latest_prediction = latest_prediction.filter(
@@ -222,6 +238,21 @@ class DashboardMapAPIView(APIView):
                 "model_release_id": None,
             }
 
+            if is_outlook:
+                item["outlook_basis"] = (
+                    "Seasonal estimate adjusted using real May–October 2026 weather"
+                    if county.name in outlook_release else "Historical seasonal estimate only"
+                )
+                item["outlook_score"] = outlook_release.get(
+                    county.name, seasonal_outlook(county.name, month)
+                )
+                if county.name in rolling_scores:
+                    item["outlook_score"] = rolling_scores[county.name]
+                    item["outlook_basis"] = rolling_basis
+                    detail = rolling_details.get(county.name, {})
+                    if detail:
+                        item["outlook_band"] = detail.get("band")
+                        item["outlook_evidence"] = detail
             if prediction is not None:
                 observation_date = (
                     prediction.observation.observation_date

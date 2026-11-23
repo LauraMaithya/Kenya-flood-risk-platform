@@ -32,6 +32,19 @@ const NO_DATA_STYLE = {
   className: "unavailable",
 };
 
+function outlookBand(score, providedBand = null) {
+  if (["High", "Medium", "Low"].includes(providedBand)) {
+    return providedBand;
+  }
+  if (score == null) return null;
+  return score >= 0.15 ? "High" : score >= 0.05 ? "Medium" : "Low";
+}
+
+function outlookText(score) {
+  if (score == null) return "No outlook coverage";
+  return `${(score * 100).toFixed(1)}% estimated likelihood of sustained high flood-risk conditions`;
+}
+
 
 function createPopupContent(county) {
   const container = document.createElement("div");
@@ -43,7 +56,9 @@ function createPopupContent(county) {
 
   const risk = document.createElement("p");
 
-  if (county.data_status === "AVAILABLE") {
+  if ("outlook_score" in county) {
+    risk.textContent = outlookText(county.outlook_score);
+  } else if (county.data_status === "AVAILABLE") {
     risk.textContent = `Flood risk: ${county.risk_level}`;
     risk.className = `popup-risk risk-${county.risk_level.toLowerCase()}`;
   } else {
@@ -65,7 +80,9 @@ function createPopupContent(county) {
 
 function createMarkerIcon(county) {
   const style =
-    RISK_STYLE[county.risk_level] || NO_DATA_STYLE;
+    RISK_STYLE["outlook_score" in county
+      ? outlookBand(county.outlook_score, county.outlook_band)
+      : county.risk_level] || NO_DATA_STYLE;
 
   return L.divIcon({
     className: "risk-marker-wrapper",
@@ -143,6 +160,49 @@ function initialiseRiskMap() {
   const riskLevelElement = document.querySelector(
     "[data-county-risk-level]"
   );
+  const riskDetailsElement = riskCard?.querySelector(
+    ".county-risk-details"
+  );
+
+  if (riskDetailsElement && !document.querySelector("[data-outlook-why]")) {
+    [
+      ["Why this outlook?", "outlookWhy"],
+      ["Recent rainfall", "outlookRain"],
+      ["Soil wetness", "outlookSoil"],
+      ["Historical susceptibility", "outlookHistory"],
+      ["Forecast lead", "outlookLead"],
+    ].forEach(([label, field]) => {
+      const row = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      row.className = "outlook-evidence";
+      row.dataset.outlookEvidence = "";
+      row.hidden = true;
+      term.textContent = label;
+      description.dataset[field] = "";
+      description.textContent = "Not available";
+      row.append(term, description);
+      riskDetailsElement.appendChild(row);
+    });
+  }
+
+  const outlookSummary = document.querySelector(
+    ".monthly-outlook-summary small"
+  );
+  if (outlookSummary) {
+    outlookSummary.textContent =
+      "Planning outlook from a chronologically tested, lead-specific " +
+      "monthly model. Bands use validation thresholds for this forecast " +
+      "lead; this is not a live flood warning.";
+  }
+  const outlookEvidenceElements = document.querySelectorAll(
+    "[data-outlook-evidence]"
+  );
+  const outlookWhyElement = document.querySelector("[data-outlook-why]");
+  const outlookRainElement = document.querySelector("[data-outlook-rain]");
+  const outlookSoilElement = document.querySelector("[data-outlook-soil]");
+  const outlookHistoryElement = document.querySelector("[data-outlook-history]");
+  const outlookLeadElement = document.querySelector("[data-outlook-lead]");
 
   if (
   !mapElement ||
@@ -218,6 +278,20 @@ const predictionsByCounty = new Map(
   ])
 );
 
+if (counties.some((county) => "outlook_score" in county)) {
+  const totals = {High: 0, Medium: 0, Low: 0, Covered: 0};
+  for (const county of counties) {
+    const band = outlookBand(county.outlook_score, county.outlook_band);
+    if (band) {
+      totals[band]++;
+      totals.Covered++;
+    }
+  }
+  document.querySelectorAll("[data-outlook-count]").forEach((element) => {
+    element.textContent = totals[element.dataset.outlookCount];
+  });
+}
+
 const boundaryStyle = {
   color: "#315d66",
   weight: 1.1,
@@ -281,6 +355,40 @@ const showCountyRisk = (countyName, countyKey) => {
 
   countyNameElement.textContent = `${countyName} County`;
   riskCard.hidden = false;
+
+  if (county && "outlook_score" in county) {
+    const band = outlookBand(county.outlook_score, county.outlook_band);
+    riskBadgeElement.textContent = band || "No data";
+    riskBadgeElement.dataset.risk = band || "";
+    observationDateElement.textContent = payload.period.label;
+    riskLevelElement.textContent = band
+      ? `${outlookText(county.outlook_score)} · ${county.outlook_basis}`
+      : outlookText(county.outlook_score);
+    const evidence = county.outlook_evidence;
+    if (outlookEvidenceElements.length && evidence) {
+      outlookEvidenceElements.forEach((element) => {
+        element.hidden = false;
+      });
+      outlookWhyElement.textContent = evidence.why;
+      outlookRainElement.textContent =
+        `${evidence.recent_rainfall_mm.toFixed(1)} mm recently · ` +
+        `${evidence.normal_rainfall_mm.toFixed(1)} mm normal`;
+      outlookSoilElement.textContent =
+        `${evidence.recent_soil_wetness.toFixed(2)} recently · ` +
+        `${evidence.normal_soil_wetness.toFixed(2)} normal`;
+      outlookHistoryElement.textContent =
+        `${(evidence.historical_susceptibility * 100).toFixed(1)}% seasonal susceptibility`;
+      outlookLeadElement.textContent =
+        `${evidence.lead_months}-month lead from the observation cutoff`;
+    }
+    return;
+  }
+
+  if (outlookEvidenceElements.length) {
+    outlookEvidenceElements.forEach((element) => {
+      element.hidden = true;
+    });
+  }
 
   if (
     !county ||
@@ -400,7 +508,11 @@ const boundaryLayer = L.geoJSON(
       alt: `${countyName} County flood-risk marker`,
     });
 
-    marker.bindTooltip(`${countyName} County`, {
+    const markerLabel = document.createElement("span");
+    markerLabel.textContent = "outlook_score" in markerCounty
+      ? `${countyName}: ${outlookText(markerCounty.outlook_score)}`
+      : `${countyName} County`;
+    marker.bindTooltip(markerLabel, {
       direction: "top",
       offset: [0, -12],
       opacity: 0.96,

@@ -38,14 +38,13 @@ class NasaPowerRefreshSummary:
     dry_run: bool
 
 
-def refresh_nasa_power_county(
+def extract_nasa_power_county_days(
     county,
     *,
     start_date,
     end_date,
     sample_point_count=3,
     timeout=30,
-    dry_run=False,
 ):
     if county.pk is None:
         raise NasaPowerRefreshError(
@@ -113,6 +112,25 @@ def refresh_nasa_power_county(
             f"{county.name}: {exc}"
         ) from exc
 
+    return county_days, len(point_records)
+
+
+def refresh_nasa_power_county(
+    county,
+    *,
+    start_date,
+    end_date,
+    sample_point_count=3,
+    timeout=30,
+    dry_run=False,
+):
+    county_days, requested_points = extract_nasa_power_county_days(
+        county,
+        start_date=start_date,
+        end_date=end_date,
+        sample_point_count=sample_point_count,
+        timeout=timeout,
+    )
     try:
         storage = store_nasa_power_county_days(
             county,
@@ -128,7 +146,7 @@ def refresh_nasa_power_county(
     return NasaPowerRefreshSummary(
         county_code=county.code,
         county_name=county.name,
-        requested_points=len(point_records),
+        requested_points=requested_points,
         county_days=len(county_days),
         observations_created=storage.created,
         observations_updated=storage.updated,

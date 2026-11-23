@@ -135,26 +135,23 @@ def run_daily_refresh(
     alerts_created = 0
     alerts_existing = 0
 
-    in_app_recipient = settings.IN_APP_ALERT_RECIPIENT
-    email_recipients = settings.ALERT_EMAIL_RECIPIENTS
-
-    if alert_channel == AlertNotification.Channel.IN_APP:
-        in_app_recipient = alert_recipient
-    elif alert_channel == AlertNotification.Channel.EMAIL:
-        email_recipients = [alert_recipient]
-
-    for prediction in high_predictions:
+    if alert_channel is not None:
+        delivery_targets = [
+            (alert_channel, alert_recipient),
+        ]
+    else:
         delivery_targets = [
             (
                 AlertNotification.Channel.IN_APP,
-                in_app_recipient,
+                settings.IN_APP_ALERT_RECIPIENT,
             ),
             *[
                 (AlertNotification.Channel.EMAIL, recipient)
-                for recipient in email_recipients
+                for recipient in settings.ALERT_EMAIL_RECIPIENTS
             ],
         ]
 
+    for prediction in high_predictions:
         for channel, recipient in delivery_targets:
             try:
                 alert_result = create_high_risk_alert(

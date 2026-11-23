@@ -17,6 +17,12 @@ from monitoring.services.nasa_power import (
 class NasaPowerServiceTests(SimpleTestCase):
     def build_payload(self):
         return {
+            "parameters": {
+                "PRECTOTCORR": {
+                    "units": "mm/day",
+                    "longname": "Precipitation Corrected",
+                },
+            },
             "properties": {
                 "parameter": {
                     "PRECTOTCORR": {
@@ -75,6 +81,29 @@ class NasaPowerServiceTests(SimpleTestCase):
             records[0].soil_wetness_fraction,
             Decimal("0.64"),
         )
+
+    def test_precipitation_is_not_multiplied_by_twenty_four(self):
+        payload = self.build_payload()
+        payload["properties"]["parameter"]["PRECTOTCORR"][
+            "20260101"
+        ] = 17.77
+
+        records = parse_nasa_power_response(payload)
+
+        self.assertEqual(
+            records[0].precipitation_mm,
+            Decimal("17.77"),
+        )
+
+    def test_unknown_precipitation_units_are_rejected(self):
+        payload = self.build_payload()
+        payload["parameters"]["PRECTOTCORR"]["units"] = "mm/hour"
+
+        with self.assertRaisesRegex(
+            NasaPowerError,
+            "units changed",
+        ):
+            parse_nasa_power_response(payload)
 
     def test_incomplete_days_are_skipped(self):
         payload = self.build_payload()

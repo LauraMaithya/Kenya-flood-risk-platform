@@ -30,6 +30,13 @@ class BatchStorageResult:
     skipped_existing: int
 
 
+@dataclass(frozen=True)
+class BatchRefreshResult:
+    processed: int
+    created: int
+    updated: int
+
+
 def _decimal_for_field(field_name, value):
     field = FloodPrediction._meta.get_field(field_name)
     decimal_value = Decimal(str(value))
@@ -208,4 +215,94 @@ def store_prediction_batch(
         processed=len(observation_rows),
         created=len(predictions),
         skipped_existing=len(existing_observation_ids),
+    )
+
+
+@transaction.atomic
+def refresh_prediction_batch(
+    observations,
+    *,
+    database_batch_size=1000,
+):
+    """Recalculate the current model release for corrected observations."""
+    observation_rows = list(observations)
+    if database_batch_size <= 0:
+        raise PredictionStorageError(
+            "Database batch size must be greater than zero."
+        )
+    if not observation_rows:
+        return BatchRefreshResult(processed=0, created=0, updated=0)
+    for observation in observation_rows:
+        _validate_observation(observation)
+    observation_ids = [row.pk for row in observation_rows]
+    if len(observation_ids) != len(set(observation_ids)):
+        raise PredictionStorageError(
+            "The batch contains duplicate observations."
+        )
+
+    release = get_model_release()
+    try:
+        results = predict_observations(observation_rows)
+    except PredictionServiceError as exc:
+        raise PredictionStorageError(str(exc)) from exc
+
+    existing = {
+        prediction.observation_id: prediction
+        for prediction in FloodPrediction.objects.filter(
+            observation_id__in=observation_ids,
+            model_release_id=release.release_id,
+        )
+    }
+    to_create = []
+    to_update = []
+    update_fields = [
+        "risk_level",
+        "probability_low",
+        "probability_medium",
+        "probability_high",
+        "decision_rule",
+        "high_probability_threshold",
+    ]
+    for observation, result in zip(
+        observation_rows,
+        results,
+        strict=True,
+    ):
+        values = _prediction_values(result)
+        prediction = existing.get(observation.pk)
+        if prediction is None:
+            prediction = FloodPrediction(
+                observation=observation,
+                model_release_id=release.release_id,
+                **values,
+            )
+            to_create.append(prediction)
+        else:
+            for field, value in values.items():
+                setattr(prediction, field, value)
+            to_update.append(prediction)
+        try:
+            prediction.full_clean(
+                validate_unique=False,
+                validate_constraints=False,
+            )
+        except ValidationError as exc:
+            raise PredictionStorageError(
+                "Invalid recalculated prediction for observation "
+                f"{observation.pk}: {exc.messages}"
+            ) from exc
+
+    FloodPrediction.objects.bulk_create(
+        to_create,
+        batch_size=database_batch_size,
+    )
+    FloodPrediction.objects.bulk_update(
+        to_update,
+        update_fields,
+        batch_size=database_batch_size,
+    )
+    return BatchRefreshResult(
+        processed=len(observation_rows),
+        created=len(to_create),
+        updated=len(to_update),
     )

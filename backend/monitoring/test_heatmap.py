@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -572,6 +573,26 @@ class DashboardMapAPITests(APITestCase):
             "latest flood-risk classification "
             "within the selected period",
         )
+
+    @patch(
+        "monitoring.web_views.available_outlook_months",
+        return_value=("2027-01", "2027-02", "2027-03"),
+    )
+    def test_dashboard_uses_last_published_outlook_months(self, mocked_months):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("monitoring-web:dashboard")
+        )
+
+        self.assertEqual(
+            list(response.context["outlook_options"]),
+            ["2027-01", "2027-02", "2027-03"],
+        )
+        self.assertContains(response, "January 2027")
+        self.assertContains(response, "February 2027")
+        self.assertContains(response, "March 2027")
+        mocked_months.assert_called_once_with()
 
     def test_dashboard_accepts_year_with_all_months(self):
         county = self.create_county(

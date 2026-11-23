@@ -9,7 +9,7 @@ from django.core.management import (
     call_command,
     CommandError,
 )
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from monitoring.models import (
     AlertNotification,
@@ -40,6 +40,11 @@ BATCH_PREDICTION_PATCH = (
 )
 
 
+@override_settings(
+    ALERT_EMAIL_RECIPIENTS=[],
+    IN_APP_ALERT_RECIPIENT="platform-users",
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+)
 class DailyRefreshTests(TestCase):
     def setUp(self):
         self.temporary_files = []

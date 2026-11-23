@@ -3465,6 +3465,16 @@ select:focus-visible {
 
 /* Risk summary */
 
+.monthly-outlook-summary {
+  padding: 0.7rem 1rem;
+  color: #17353d;
+  background: #edf5f7;
+}
+
+.monthly-outlook-summary p {
+  margin: 0.25rem 0;
+}
+
 .dashboard-map-page .map-kpi-strip {
   position: absolute;
   z-index: 520;
@@ -3688,6 +3698,19 @@ select:focus-visible {
   font-size: 0.72rem;
   font-weight: 750;
   text-align: right;
+}
+
+.dashboard-map-stage .county-risk-details .outlook-evidence {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+}
+
+.dashboard-map-stage .county-risk-details .outlook-evidence[hidden] {
+  display: none;
+}
+
+.dashboard-map-stage [data-outlook-why] {
+  line-height: 1.35;
 }
 
 @keyframes county-panel-enter {
