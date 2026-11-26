@@ -1,6 +1,15 @@
 {% extends "monitoring/base.html" %}
+{% load static %}
 
 {% block title %}Historical Data{% endblock %}
+
+{% block extra_head %}
+  {{ block.super }}
+  <link
+    rel="stylesheet"
+    href="{% static 'monitoring/css/excel_tables.css' %}"
+  >
+{% endblock %}
 
 {% block content %}
 <section class="historical-page">
@@ -158,10 +167,55 @@
     </div>
 
     {% if predictions %}
-      <div class="historical-table-wrapper">
-        <table class="historical-table">
+      <div
+        class="excel-table-toolbar"
+        data-excel-toolbar
+      >
+        <p
+          class="excel-table-status"
+          data-excel-status
+          aria-live="polite"
+        >
+          Select a cell or drag across a range to copy values.
+        </p>
+
+        <div class="excel-table-actions">
+          <button
+            class="excel-table-button"
+            type="button"
+            data-excel-copy
+            disabled
+          >
+            Copy selected cells
+          </button>
+
+          <a
+            class="excel-table-button excel-table-button-primary"
+            href="{% url 'monitoring-web:historical-data-download' %}{% if download_query %}?{{ download_query }}{% endif %}"
+          >
+            Export CSV
+          </a>
+        </div>
+      </div>
+
+      <div
+        class="historical-table-wrapper excel-table-shell"
+        data-excel-table-shell
+      >
+        <table
+          class="historical-table excel-table"
+          data-excel-table
+          aria-label="Historical flood-risk records"
+        >
           <thead>
             <tr>
+              <th
+                class="excel-table-corner"
+                scope="col"
+                aria-label="Select all cells"
+              >
+                #
+              </th>
               <th scope="col">County</th>
               <th scope="col">Observation date</th>
               <th scope="col">Risk level</th>
@@ -174,6 +228,13 @@
           <tbody>
             {% for prediction in predictions %}
               <tr>
+                <th
+                  class="excel-table-row-number"
+                  scope="row"
+                  aria-label="Select row {{ forloop.counter }}"
+                >
+                  {{ forloop.counter }}
+                </th>
                 <td>
                   <strong>
                     {{ prediction.observation.county.name }}
@@ -251,4 +312,12 @@
     {% endif %}
   </section>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+  {{ block.super }}
+  <script
+    src="{% static 'monitoring/js/excel_tables.js' %}"
+    defer
+  ></script>
 {% endblock %}

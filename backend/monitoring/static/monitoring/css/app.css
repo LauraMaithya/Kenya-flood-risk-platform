@@ -4147,3 +4147,30 @@ select:focus-visible {
     opacity: 0.35;
   }
 }
+/* Confidence chart interaction */
+.county-confidence-donut {
+  cursor: crosshair;
+}
+
+.county-confidence-centre {
+  pointer-events: none;
+}
+
+.county-confidence-legend > div {
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.county-confidence-legend > div:hover,
+.county-confidence-legend > div:focus-visible,
+.county-confidence-legend > div.is-active {
+  background: rgba(52, 127, 163, 0.09);
+}
+
+.county-confidence-legend > div.is-active dt,
+.county-confidence-legend > div.is-active dd {
+  color: var(--navy-deep);
+}
+/* End confidence chart interaction */

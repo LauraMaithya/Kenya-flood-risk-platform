@@ -1,0 +1,253 @@
+/* Read-only spreadsheet treatment shared by County Risk and Historical Data. */
+
+.excel-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0 0.75rem;
+}
+
+.excel-table-status {
+  margin: 0;
+  color: #5f7185;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.excel-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.excel-table-button {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #b7c8d7;
+  border-radius: 0.45rem;
+  color: #123b63;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.excel-table-button:hover {
+  border-color: #347fa3;
+  background: #eef5f8;
+}
+
+.excel-table-button:focus-visible {
+  outline: 3px solid rgba(52, 127, 163, 0.24);
+  outline-offset: 2px;
+}
+
+.excel-table-button:disabled {
+  border-color: #d7e0e7;
+  color: #8c9aa7;
+  background: #f4f6f8;
+  cursor: not-allowed;
+}
+
+.excel-table-button-primary,
+.excel-table-button-primary:hover {
+  border-color: #123b63;
+  color: #ffffff;
+  background: #123b63;
+}
+
+.excel-table-button-primary:hover {
+  border-color: #347fa3;
+  background: #347fa3;
+}
+
+.excel-table-shell {
+  position: relative;
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid #c9d6e0;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  scrollbar-color: #9fb3c3 #edf2f5;
+  scrollbar-width: thin;
+}
+
+.excel-table {
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+  white-space: nowrap;
+}
+
+.excel-table th,
+.excel-table td {
+  height: 2.65rem;
+  padding: 0.62rem 0.75rem;
+  border-right: 1px solid #d9e2e9;
+  border-bottom: 1px solid #d9e2e9;
+  background: #ffffff;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.excel-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  color: #334f69;
+  background: #e9eff4;
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.excel-table thead th:hover,
+.excel-table-row-number:hover,
+.excel-table-corner:hover {
+  background: #dce7ef;
+}
+
+.excel-table tbody td {
+  position: relative;
+  color: #102f4c;
+  font-size: 0.8rem;
+  cursor: cell;
+  user-select: none;
+}
+
+.excel-table tbody tr:nth-child(even) td {
+  background: #f8fafb;
+}
+
+.excel-table tbody tr:hover td:not(.is-selected) {
+  background: #f1f6f9;
+}
+
+.excel-table tbody tr:hover {
+  box-shadow: none;
+}
+
+.excel-table th:last-child,
+.excel-table td:last-child {
+  border-right: 0;
+}
+
+.excel-table tbody tr:last-child th,
+.excel-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.excel-table-corner,
+.excel-table-row-number {
+  width: 3rem;
+  min-width: 3rem;
+  max-width: 3rem;
+  padding-right: 0.45rem !important;
+  padding-left: 0.45rem !important;
+  color: #60758a !important;
+  background: #edf2f5 !important;
+  text-align: center !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  user-select: none;
+}
+
+.excel-table-corner {
+  position: sticky !important;
+  top: 0;
+  left: 0;
+  z-index: 5 !important;
+}
+
+.excel-table-row-number {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border-right: 1px solid #c9d6e0;
+}
+
+.excel-table td.is-selected {
+  z-index: 1;
+  background: #e0eef6 !important;
+  box-shadow: inset 0 0 0 1px #347fa3;
+}
+
+.excel-table th.is-selected {
+  color: #ffffff !important;
+  background: #347fa3 !important;
+}
+
+.excel-table td.is-selection-anchor {
+  box-shadow: inset 0 0 0 2px #123b63;
+}
+
+.excel-table.is-selecting,
+.excel-table.is-selecting * {
+  user-select: none !important;
+}
+
+.excel-table td:focus-visible,
+.excel-table th:focus-visible {
+  z-index: 4;
+  outline: 2px solid #123b63;
+  outline-offset: -2px;
+}
+
+.excel-table td strong,
+.excel-table td small {
+  display: block;
+}
+
+.excel-table td small {
+  margin-top: 0.15rem;
+  color: #6c7e90;
+  font-size: 0.68rem;
+}
+
+@media (max-width: 700px) {
+  .excel-table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .excel-table-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .excel-table-button {
+    width: 100%;
+  }
+
+  .excel-table-shell {
+    border-radius: 0.5rem;
+  }
+
+  .excel-table th,
+  .excel-table td {
+    height: 2.5rem;
+    padding: 0.55rem 0.65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .excel-table-button {
+    transition: none;
+  }
+}

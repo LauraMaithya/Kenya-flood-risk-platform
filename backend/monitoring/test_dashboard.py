@@ -307,6 +307,16 @@ class DashboardPageTests(TestCase):
         self.assertContains(response, "Monitoring")
         self.assertContains(response, "Account")
         self.assertContains(response, "Kenya Flood Risk")
+        self.assertContains(
+            response,
+            'class="sidebar-tree" data-sidebar-tree',
+            count=2,
+        )
+        self.assertContains(
+            response,
+            "data-sidebar-tree-item",
+            count=5,
+        )
 
     def test_profile_uses_flood_mark_instead_of_initialism(self):
         self.client.force_login(self.user)

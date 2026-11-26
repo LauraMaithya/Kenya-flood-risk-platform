@@ -266,6 +266,18 @@ class CountyRiskPageTests(TestCase):
             response,
             "Data and quality information",
         )
+        self.assertContains(
+            response,
+            'data-excel-table',
+        )
+        self.assertContains(
+            response,
+            "Copy selected cells",
+        )
+        self.assertContains(
+            response,
+            "Export CSV",
+        )
         self.assertNotContains(
             response,
             "Seasonal month sine",

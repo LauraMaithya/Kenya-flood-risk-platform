@@ -36,113 +36,132 @@
       Monitoring
     </span>
 
-    <a
-      href="{% url 'monitoring-web:dashboard' %}"
-      {% if active == "dashboard" %}aria-current="page"{% endif %}
-      title="Dashboard"
-    >
-      <span class="nav-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path d="M4 19V11"></path>
-          <path d="M10 19V5"></path>
-          <path d="M16 19V9"></path>
-          <path d="M22 19V3"></path>
-          <path d="M3 19H22"></path>
-        </svg>
-      </span>
+    <div class="sidebar-tree" data-sidebar-tree>
+      <span class="sidebar-tree-track" aria-hidden="true"></span>
+      <span class="sidebar-tree-accent" aria-hidden="true"></span>
+      <span class="sidebar-tree-marker" aria-hidden="true"></span>
+      <span class="sidebar-tree-highlight" aria-hidden="true"></span>
 
-      <span class="sidebar-label">Dashboard</span>
-    </a>
-
-    <a
-      href="{% url 'monitoring-web:county-risk' %}"
-      {% if active == "county-risk" %}aria-current="page"{% endif %}
-      title="County Risk"
-    >
-      <span class="nav-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M19 9.5C19 15 12 20 12 20
-               S5 15 5 9.5A7 7 0 0 1 19 9.5Z"
-          ></path>
-          <path
-            d="M8.5 9.25C9.7 8.5 10.8 8.5 12 9.25
-               C13.2 10 14.3 10 15.5 9.25"
-          ></path>
-          <path d="M9.5 12C11.2 11.2 12.8 12.8 14.5 12"></path>
-        </svg>
-      </span>
-
-      <span class="sidebar-label">County Risk</span>
-    </a>
-
-    <a
-      href="{% url 'monitoring-web:historical-data' %}"
-      {% if active == "historical-data" %}aria-current="page"{% endif %}
-      title="Historical Data"
-    >
-      <span class="nav-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="8.5"></circle>
-          <path d="M12 7.5V12L15.25 14"></path>
-          <path d="M4.75 5.5L2.75 7.5"></path>
-          <path d="M19.25 5.5L21.25 7.5"></path>
-        </svg>
-      </span>
-
-      <span class="sidebar-label">Historical Data</span>
-    </a>
-
-    <a
-      href="{% url 'monitoring-web:alerts' %}"
-      {% if active == "alerts" %}aria-current="page"{% endif %}
-      title="Alerts"
-    >
-      <span class="nav-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M6.5 10A5.5 5.5 0 0 1 17.5 10
-               C17.5 15 20 16.5 20 16.5H4
-               S6.5 15 6.5 10Z"
-          ></path>
-          <path d="M10 19C10.6 19.8 11.2 20.2 12 20.2
-                   S13.4 19.8 14 19"></path>
-          <path d="M12 4V2.75"></path>
-        </svg>
-      </span>
-
-      <span class="sidebar-label">Alerts</span>
-      {% if unacknowledged_alert_count %}
-        <span
-          class="sidebar-alert-count"
-          aria-label="{{ unacknowledged_alert_count }} unacknowledged alerts"
-        >
-          {{ unacknowledged_alert_count }}
+      <a
+        href="{% url 'monitoring-web:dashboard' %}"
+        {% if active == "dashboard" %}aria-current="page"{% endif %}
+        title="Dashboard"
+        data-sidebar-tree-item
+      >
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 19V11"></path>
+            <path d="M10 19V5"></path>
+            <path d="M16 19V9"></path>
+            <path d="M22 19V3"></path>
+            <path d="M3 19H22"></path>
+          </svg>
         </span>
-      {% endif %}
-    </a>
+
+        <span class="sidebar-label">Dashboard</span>
+      </a>
+
+      <a
+        href="{% url 'monitoring-web:county-risk' %}"
+        {% if active == "county-risk" %}aria-current="page"{% endif %}
+        title="County Risk"
+        data-sidebar-tree-item
+      >
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19 9.5C19 15 12 20 12 20
+                 S5 15 5 9.5A7 7 0 0 1 19 9.5Z"
+            ></path>
+            <path
+              d="M8.5 9.25C9.7 8.5 10.8 8.5 12 9.25
+                 C13.2 10 14.3 10 15.5 9.25"
+            ></path>
+            <path d="M9.5 12C11.2 11.2 12.8 12.8 14.5 12"></path>
+          </svg>
+        </span>
+
+        <span class="sidebar-label">County Risk</span>
+      </a>
+
+      <a
+        href="{% url 'monitoring-web:historical-data' %}"
+        {% if active == "historical-data" %}aria-current="page"{% endif %}
+        title="Historical Data"
+        data-sidebar-tree-item
+      >
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="8.5"></circle>
+            <path d="M12 7.5V12L15.25 14"></path>
+            <path d="M4.75 5.5L2.75 7.5"></path>
+            <path d="M19.25 5.5L21.25 7.5"></path>
+          </svg>
+        </span>
+
+        <span class="sidebar-label">Historical Data</span>
+      </a>
+
+      <a
+        href="{% url 'monitoring-web:alerts' %}"
+        {% if active == "alerts" %}aria-current="page"{% endif %}
+        title="Alerts"
+        data-sidebar-tree-item
+      >
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M6.5 10A5.5 5.5 0 0 1 17.5 10
+                 C17.5 15 20 16.5 20 16.5H4
+                 S6.5 15 6.5 10Z"
+            ></path>
+            <path d="M10 19C10.6 19.8 11.2 20.2 12 20.2
+                     S13.4 19.8 14 19"></path>
+            <path d="M12 4V2.75"></path>
+          </svg>
+        </span>
+
+        <span class="sidebar-label">Alerts</span>
+        {% if unacknowledged_alert_count %}
+          <span
+            class="sidebar-alert-count"
+            aria-label="{{ unacknowledged_alert_count }} unacknowledged alerts"
+          >
+            {{ unacknowledged_alert_count }}
+          </span>
+        {% endif %}
+      </a>
+    </div>
 
     <span class="sidebar-section-label sidebar-label">
       Account
     </span>
 
-    <a
-      href="{% url 'monitoring-web:profile' %}"
-      {% if active == "profile" %}aria-current="page"{% endif %}
-      title="User Profile"
-    >
-      <span class="nav-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <circle cx="12" cy="8" r="3.5"></circle>
-          <path
-            d="M5 20C5.7 16.2 8 14.5 12 14.5
-               S18.3 16.2 19 20"
-          ></path>
-        </svg>
-      </span>
+    <div class="sidebar-tree" data-sidebar-tree>
+      <span class="sidebar-tree-track" aria-hidden="true"></span>
+      <span class="sidebar-tree-accent" aria-hidden="true"></span>
+      <span class="sidebar-tree-marker" aria-hidden="true"></span>
+      <span class="sidebar-tree-highlight" aria-hidden="true"></span>
 
-      <span class="sidebar-label">User Profile</span>
-    </a>
+      <a
+        href="{% url 'monitoring-web:profile' %}"
+        {% if active == "profile" %}aria-current="page"{% endif %}
+        title="User Profile"
+        data-sidebar-tree-item
+      >
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="3.5"></circle>
+            <path
+              d="M5 20C5.7 16.2 8 14.5 12 14.5
+                 S18.3 16.2 19 20"
+            ></path>
+          </svg>
+        </span>
+
+        <span class="sidebar-label">User Profile</span>
+      </a>
+    </div>
   </nav>
 
   <button

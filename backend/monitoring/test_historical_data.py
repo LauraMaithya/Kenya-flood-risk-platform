@@ -185,6 +185,18 @@ class HistoricalDataTests(TestCase):
             response,
             "Model release",
         )
+        self.assertContains(
+            response,
+            'data-excel-table',
+        )
+        self.assertContains(
+            response,
+            "Copy selected cells",
+        )
+        self.assertContains(
+            response,
+            "Export CSV",
+        )
         for prediction in response.context["predictions"]:
             self.assertNotContains(
                 response,
