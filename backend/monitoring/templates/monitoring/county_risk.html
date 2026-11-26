@@ -1,4 +1,13 @@
 {% extends "monitoring/base.html" %}
+{% load static %}
+
+{% block extra_head %}
+  {{ block.super }}
+  <link
+    rel="stylesheet"
+    href="{% static 'monitoring/css/excel_tables.css' %}"
+  >
+{% endblock %}
 
 {% block content %}
 <section class="county-risk-page">
@@ -241,11 +250,54 @@
         </div>
 
         <div
-          class="county-history-table-wrapper historical-table-wrapper"
+          class="excel-table-toolbar"
+          data-excel-toolbar
         >
-          <table class="county-history-table historical-table">
+          <p
+            class="excel-table-status"
+            data-excel-status
+            aria-live="polite"
+          >
+            Select a cell or drag across a range to copy values.
+          </p>
+
+          <div class="excel-table-actions">
+            <button
+              class="excel-table-button"
+              type="button"
+              data-excel-copy
+              disabled
+            >
+              Copy selected cells
+            </button>
+
+            <a
+              class="excel-table-button excel-table-button-primary"
+              href="{% url 'monitoring-web:historical-data-download' %}?county={{ selected_county.slug }}"
+            >
+              Export CSV
+            </a>
+          </div>
+        </div>
+
+        <div
+          class="county-history-table-wrapper historical-table-wrapper excel-table-shell"
+          data-excel-table-shell
+        >
+          <table
+            class="county-history-table historical-table excel-table"
+            data-excel-table
+            aria-label="{{ selected_county.name }} risk history"
+          >
             <thead>
               <tr>
+                <th
+                  class="excel-table-corner"
+                  scope="col"
+                  aria-label="Select all cells"
+                >
+                  #
+                </th>
                 <th scope="col">Observation date</th>
                 <th scope="col">Risk level</th>
                 <th scope="col">Precipitation</th>
@@ -258,6 +310,13 @@
             <tbody>
               {% for prediction in recent_predictions %}
                 <tr>
+                  <th
+                    class="excel-table-row-number"
+                    scope="row"
+                    aria-label="Select row {{ forloop.counter }}"
+                  >
+                    {{ forloop.counter }}
+                  </th>
                   <td>
                     {{ prediction.observation.observation_date|date:"j M Y" }}
                   </td>
@@ -287,7 +346,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6">
+                  <td colspan="7">
                     No recent observations are available.
                   </td>
                 </tr>
@@ -343,4 +402,12 @@
     </section>
   {% endif %}
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+  {{ block.super }}
+  <script
+    src="{% static 'monitoring/js/excel_tables.js' %}"
+    defer
+  ></script>
 {% endblock %}
